@@ -11,15 +11,44 @@ import QuartzCore
 import SceneKit
 //import FirebaseDatabase
 
-let sideLen:CGFloat = 5.0
 
-func scaleVector(vec:SCNVector3) -> SCNVector3 {
-    vec.x = vec.x*sideLen
-    vec.y = vec.y*sideLen
-    vec.z = vec.z*sideLen
+
+func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
+    var vecToMut = vec
     
-    return vec
+    vecToMut.x.multiply(by: scalingFactor)
+    vecToMut.y.multiply(by: scalingFactor)
+    vecToMut.z.multiply(by: scalingFactor)
+    
+    return vecToMut
 }
+
+//func addX(vec:SCNVector3, increaseBy:Float) -> SCNVector3 {
+//    var vecToMut = vec
+//    
+//    vecToMut.x.add(increaseBy)
+//    
+//    return vecToMut
+//}
+//
+//func addY(vec:SCNVector3, increaseBy:Float) -> SCNVector3 {
+//    var vecToMut = vec
+//    
+//    vecToMut.y.add(increaseBy)
+//    
+//    return vecToMut
+//}
+//
+//func addZ(vec:SCNVector3, increaseBy:Float) -> SCNVector3 {
+//    var vecToMut = vec
+//    
+//    vecToMut.z.add(increaseBy)
+//    
+//    return vecToMut
+//}
+
+
+
 
 func makeMaterials() -> [SCNMaterial]{
     let colors = [UIColor.white, UIColor.green, UIColor.yellow, UIColor.blue, UIColor.red, UIColor.orange, UIColor.black, UIColor.gray]
@@ -69,25 +98,126 @@ let colorCodes = [
 
 
 
+//
+//func makeMaterialFromEncoding(positionEncoding:[Int]) -> [SCNMaterial] {
+//    
+//    
+//    
+//    
+//    
+//    
+//    let materials:[SCNMaterial] = makeMaterials()
+//    
+//    var uniqueMaterials:[SCNMaterial]
+//    
+//    for i in 0...(positionEncoding.characters.count - 1) {
+//        if encoding[i] == 1 {
+//            uniqueMaterials.append(materials[i])
+//        }
+//        else {
+//            uniqueMaterials.append(materials[6])
+//        }
+//    }
+//    
+//    return uniqueMaterials
+//}
 
-func makeMaterialsFromEncoding(positionEncoding:String) -> [SCNMaterial] {
+
+
+
+
+
+
+
+
+//consider forming single class with cubie
+class panel {
+    
+    var panelNode:SCNNode
     
     
-    let materials:[SCNMaterial] = makeMaterials()
-    
-    var uniqueMaterials:[SCNMaterial]
-    
-    for i in 0...(positionEncoding.characters.count - 1) {
-        if encoding[i] == 1 {
-            uniqueMaterials.append(materials[i])
-        }
-        else {
-            uniqueMaterials.append(materials[6])
-        }
+    init(material:SCNMaterial, pos:SCNVector3, thickness:CGFloat, squareLen:CGFloat, chamfer:CGFloat) {
+        
+        
+        let panel = SCNBox(width: squareLen, height: squareLen, length: thickness, chamferRadius: chamfer)
+        
+        panel.firstMaterial = material
+        
+        panelNode = SCNNode(geometry: panel)
+        panelNode.position = pos
+            //scaleVector(vec: pos, scalingFactor: Float(squareLen))
     }
     
-    return uniqueMaterials
+    
 }
+
+
+//
+//class face {
+//
+//    
+//    var faceMap: [String : panel] = [:]
+//    var faceNode:SCNNode
+//    
+//    
+//    //var rot:rotationGroup
+//    
+//    
+////    var edges:[cubie]
+////    var corners:[cubie]
+//    
+//    
+//    
+//    
+//    init(dim:Int, faceThickness:CGFloat, cubeSideLen:CGFloat) {
+//        
+//        
+//        
+//        
+//        let cubieSideLen:CGFloat = cubeSideLen/CGFloat(dim)
+//        
+//        
+//        
+//        faceNode = SCNNode()
+//        
+//        let maxCoordMag:Int = dim/2
+//        
+//        for coord1 in -maxCoordMag ... maxCoordMag {
+//            for coord2 in -maxCoordMag ... maxCoordMag {
+//                
+//                // TODO: figure out scaling with this
+//                
+//                
+//                
+//                
+//                
+//                let unitVec:SCNVector3 = SCNVector3(Float(coord1), Float(coord2),0)
+//                let panelPos:SCNVector3 = addZ(vec: scaleVector(vec: unitVec, scalingFactor: Float(cubieSideLen)), increaseBy: 5)
+//                
+//                
+//                // TODO: move where materials are established
+//                let faceMaterial = makeMaterials()[3]
+//                
+//                
+//                // make the individual panel
+//                let pan:panel = panel(material: faceMaterial, pos: panelPos, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
+//                
+//                // create string representation of the coordinates of the panel and use as dictionary key
+//                let coordString = String(coord1) + "," + String(coord2)
+//                faceMap[coordString] =  pan
+//                
+//                faceNode.addChildNode(pan.panelNode)
+//                
+//                
+//            }
+//        }
+//    }
+//}
+
+
+
+
+    
 
 
 
@@ -96,97 +226,267 @@ func makeMaterialsFromEncoding(positionEncoding:String) -> [SCNMaterial] {
 class cubie {
     
     // node of cube to be attatched to the parent node of a face
-    private var node:SCNNode
+    var node:SCNNode
     
-    init(materialCode:[Bool], pos:SCNVector3) {
+    
+    
+    
+    init(pos:SCNVector3, sideLen:CGFloat) {
         
-        let chamfer:CGFloat = 1.0
+        // use makeMaterials function to get an array of materials
+        let materials = makeMaterials()
         
+        // chamfer radius to give cube a curve
+        let chamfer:CGFloat = 0.05
+        
+        
+        // define the box geometry which is the foundation of our cubie
         let box = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
         
-        box.materials = makeMaterialsFromEncoding(encoding: materialCode)
+        // TODO: make this change accecible from the cubie class
+        // currently this sets all the bases of the cubies to be gray
+        box.firstMaterial = materials[6]
         
         
         node = SCNNode(geometry: box)
-        node.position = scaleVector(vec: pos)
+        
+        
+        // TODO: verify this is the best way to scale the cube
+        //node.position = scaleVector(vec: pos, scalingFactor: Float(sideLen))
+        node.position = pos
     }
     
     
-    func getPos() -> SCNVector3 {
     
+    // TODO: find out if these functions are needed
+    func getPos() -> SCNVector3 {
+        
         return node.position
     }
     
-    func setPos(newPos:SCNVector3) {
-        
-        self.node.position = scaleVector(vec: newPos)
-            
-    }
+//    func setPos(newPos:SCNVector3) {
+//        
+//        self.node.position = scaleVector(vec: newPos, scalingFactor: sideLen)
+//        
+//    }
     
 }
 
 
-class face {
 
+
+
+
+//
+//class rotationGroup {
+//    
+//    
+//    private var groupName:String
+//    
+//    var cubieMap: [String : cubie] = [:]
+//    
+//    init(numCubiesPerSide:Int) {
+//        
+//        for coord1 in -numCubiesPerSide ... numCubiesPerSide {
+//            for coord2 in -numCubiesPerSide ... numCubiesPerSide {
+//                
+//                
+//                
+//            }
+//            
+//        }
+//        
+//    }
+//    
+//    
+//    
+//}
+
+
+// TODO: find a good place for this definition
+let sides:[String] = ["front", "back", "left", "right", "top", "bottom"]
+
+
+class rubicksCube {
     
-    var center:cubie
-    var edges:[cubie]
-    var corners:[cubie]
+    // the representation where rotations will occur on the back end
+    var cubieCoordMap: [String : Int] = [:]
     
-    init(faceColor:color, position: SCNVector3) {
+    // map for the cubies on the screen
+    var cubieMap: [String: cubie] = [:]
+    
+    // TODO: figure this thing out
+    //var rotiationGroupMap: [Int : rotationGroup]
+    
+    let cubeNode:SCNNode = SCNNode()
+    
+    init(cubeSideLen:CGFloat, numCubiesPerSide:Int, cubePos:SCNVector3) {
         
-        center = cubie(materialCode: <#T##[Bool]#>, pos: position)
+        // side length of each individual cubie based on the desired size of the whole cube as well as the number of cubes used
+        let cubieSideLen:CGFloat = cubeSideLen/CGFloat(numCubiesPerSide)
         
+        // create initial node for the cube that will be attached to no geometry
         
-        let coordinateOptions:[Float] =
+        cubeNode.position = cubePos
         
+        // create nodes for each of the rotation groups
+        // TODO: actually use these nodes
+        for side in sides {
+            let rotGroupNode:SCNNode = SCNNode()
+            rotGroupNode.position = cubePos
+            rotGroupNode.name = side
+            cubeNode.addChildNode(rotGroupNode)
+        }
         
-        let coord = [
-            "no z" : [[]
-            "no y" :
-            "no x" :
+        // used for cubieCoordMap
+        var cubieCount:Int = 0
         
+        // maximum coordinate magnitude
+        let maxCoordMag = numCubiesPerSide/2
         
-        ]
-        
-        
-        
-        
-        if center.getPos().z != 0 {
-            for coordinate in coordinateOptions {
-                
-                
-                
-                let edgePosX:SCNVector3 = SCNVector3(x:coordinate[0], y:coordinate[1], z:sideLen)
+        // loop through all possible coordinates
+        // TODO: make sure this works for even numbers of numCubiesPerSide
+        for coord1 in -maxCoordMag ... maxCoordMag {
+            for coord2 in -maxCoordMag ... maxCoordMag {
+                for coord3 in -maxCoordMag ... maxCoordMag {
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    // set the position of each cubie based on the coordinates
+                    
+                    let unitVec = SCNVector3(Float(coord1), Float(coord2), Float(coord3))
+                    let cubiePos = scaleVector(vec: unitVec, scalingFactor: Float(cubieSideLen))
+                    
+                    
+                    
+                    // create a cubie using that position
+                    // TODO: change variable names because it's easy to mix up cubieSideLen and cubeSideLen
+                    let cub:cubie = cubie(pos: cubiePos, sideLen:cubieSideLen)
+                    
+                    
+                    
+                    // TODO: move where materials are established
+                    let faceMaterials = makeMaterials()
+                    
+                    
+                    let faceThickness:CGFloat = 0.1
+                    
+                    
+                    
+                    
+                    
+                    
+                    if abs(coord1)/maxCoordMag == 1 {
+                        
+                        
+                        
+                        
+                        let unitCoord:Int = coord1/maxCoordMag
+                        
+                        // NOTE THIS IS SUBJECT TO CHANGE
+                        let faceMaterial = faceMaterials[-unitCoord + 2]
+                        
+                        let panelUnitVec1:SCNVector3 = SCNVector3(Float(unitCoord), 0, 0)
+                        let panelPos1:SCNVector3 = scaleVector(vec: panelUnitVec1, scalingFactor: Float(cubieSideLen)/2)
+                        let pan1:panel = panel(material: faceMaterial, pos: panelPos1, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
+                        
+                        pan1.panelNode.eulerAngles = SCNVector3(0,3.14/2,0)
+                        
+                        cub.node.addChildNode(pan1.panelNode)
+                    }
+                    
+                    
+                    
+                    
+                    
+                    if abs(coord2)/maxCoordMag == 1 {
+                        
+                        let unitCoord:Int = coord2/maxCoordMag
+                        
+                        // NOTE THIS IS SUBJECT TO CHANGE
+                        let faceMaterial = faceMaterials[Int(-(Float(unitCoord)/2.0) + 4.5)]
+                        
+                        let panelUnitVec2:SCNVector3 = SCNVector3(0, Float(unitCoord), 0)
+                        let panelPos2:SCNVector3 = scaleVector(vec: panelUnitVec2, scalingFactor: Float(cubieSideLen)/2)
+                        let pan2:panel = panel(material: faceMaterial, pos: panelPos2, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
+                        
+                        pan2.panelNode.eulerAngles = SCNVector3(3.14/2,0,0)
+                        
+                        cub.node.addChildNode(pan2.panelNode)
+                    }
+                    
+                    
+                    
+                    
+                    if abs(coord3)/maxCoordMag == 1 {
+                        
+                        let unitCoord:Int = coord3/maxCoordMag
+                        
+                        // NOTE THIS IS SUBJECT TO CHANGE
+                        let faceMaterial = faceMaterials[-(unitCoord - 1)]
+                        
+                        let panelUnitVec3:SCNVector3 = SCNVector3(0, 0, Float(unitCoord))
+                        let panelPos3:SCNVector3 = scaleVector(vec: panelUnitVec3, scalingFactor: Float(cubieSideLen)/2)
+                        let pan3:panel = panel(material: faceMaterial, pos: panelPos3, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
+                        cub.node.addChildNode(pan3.panelNode)
 
-                let edgeX:cubie = cubie(materials: [SCNMaterial], pos: edgePos)
-                edges.append(edge)
-                
-                
-                
-                
-                
-                let edgePosY = SCNVector3(x:0, y:j, z:sideLen)
+                    }
+                    
+                    
+//                    var panelCoordArray:[Int] = [Int]()
+//                    let coordArray = [coord1,coord2,coord3]
+//                    
+//                    for i in 0...2 {
+//                        panelCoordArray.append(coordArray[i]/maxCoordMag)
+//                    }
+                    
+//                    let panelUnitVec1:SCNVector3 = SCNVector3(Float(panelCoordArray[0]), 0, 0)
+//                    let panelPos1:SCNVector3 = scaleVector(vec: panelUnitVec1, scalingFactor: Float(cubieSideLen))
+                    
+//                    let panelUnitVec2:SCNVector3 = SCNVector3(0, Float(panelCoordArray[1]), 0)
+//                    let panelPos2:SCNVector3 = scaleVector(vec: panelUnitVec2, scalingFactor: Float(cubieSideLen))
+                    
+//                    let panelUnitVec3:SCNVector3 = SCNVector3(0, 0, Float(panelCoordArray[2]))
+//                    let panelPos3:SCNVector3 = scaleVector(vec: panelUnitVec3, scalingFactor: Float(cubieSideLen))
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
 
-                let edgeY:cubie = cubie(materials: [SCNMaterial], pos: edgePos)
-                edges.append(edge)
+                    
+                    // add that cubie to the rubicks cube node
+                    cubeNode.addChildNode(cub.node)
+                    
+                    // string representation of coordinates
+                    let coordString = String(coord1) + "," + String(coord2) + "," + String(coord3)
+                    
+                    // place cubie integer representation in map of cubies
+                    cubieCoordMap[coordString] = cubieCount
+                    
+                    // increase integer representation
+                    cubieCount += 1
+                    
+                    // place scene kit cubie in map of cubies
+                    cubieMap[coordString] = cub
+                    
+                }
             }
         }
         
-        
-        
-        
-        
-        
-        
-        
-        
     }
     
 }
-
-
-
+    
+    
 
 
 
@@ -199,176 +499,75 @@ class GameViewController: UIViewController {
     
     
     
-    func makeCenterBoxes(materials:[SCNMaterial]) -> [SCNBox] {
-        
-        var centerBoxes = [SCNBox]()
-        
-        let sideLen:CGFloat = 5.0
-        let chamfer:CGFloat = 1.0
-        
-        for i in 0...5 {
-            var templateCenter = [SCNMaterial](repeating: materials[6], count:6)
-            templateCenter[i] = materials[i]
-            let centerBox = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
-            centerBoxes.append(centerBox)
-        }
-        
-        return centerBoxes
-        
-    }
     
-    func makeCenterNodes(centerBoxes:[SCNBox]) -> [SCNNode] {
-        
-        var centerNodes = [SCNNode]()
-        
-        let sideLen:CGFloat = 5.0
-        let centerDist:Float = Float(sideLen)
-        
-        for i in centerBoxes[0...5]{
-            let centerNode = SCNNode(geometry: i)
-            centerNode.position = SCNVector3(x: 0, y: 0, z: 0 + centerDist)
-        
-        }
-        
-    }
+    
+    
     
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        // create scene
+        let scene = SCNScene()
+        
+        
+        // conveniece placement of rubicks cube properties
+        let cubeX:Float = 0.0
+        let cubeY:Float = 0.0
+        let cubeZ:Float = -20.0
+        //let cubieCurve:CGFloat = 0.5
+        let rubicksCubeSideLen:CGFloat = 10
+        let dimensionOfCube:Int = 3
 
         
-        // create a new scene
-//        let scene = SCNScene(/*named: "art.scnassets/ship.scn"*/)//!
-//        
-//
-//        
-//        let whiteMaterial = SCNMaterial()
-//        whiteMaterial.diffuse.contents = UIColor.white
-//        whiteMaterial.locksAmbientWithDiffuse   = true
-//        
-//        
-//        let greenMaterial = SCNMaterial()
-//        greenMaterial.diffuse.contents = UIColor.green
-//        greenMaterial.locksAmbientWithDiffuse = true
-//        
-//        
-//        let yellowMaterial = SCNMaterial()
-//        yellowMaterial.diffuse.contents = UIColor.yellow
-//        yellowMaterial.locksAmbientWithDiffuse = true
-//        
-//        let blueMaterial  = SCNMaterial()
-//        blueMaterial.diffuse.contents = UIColor.blue
-//        blueMaterial.locksAmbientWithDiffuse = true
-//        
-//        let redMaterial = SCNMaterial()
-//        redMaterial.diffuse.contents = UIColor.red
-//        redMaterial.locksAmbientWithDiffuse = true
-//        
-//        let orangeMaterial = SCNMaterial()
-//        orangeMaterial.diffuse.contents = UIColor.orange
-//        orangeMaterial.locksAmbientWithDiffuse = true
-//        
-//        
-//        
-//        
-//        
-//        
-//        
-//        let blackMaterial = SCNMaterial()
-//        blackMaterial.diffuse.contents = UIColor.black
-//        blackMaterial.locksAmbientWithDiffuse   = true
-//        
-//        let darkGreyMaterial = SCNMaterial()
-//        darkGreyMaterial.diffuse.contents = UIColor.darkGray
-//        darkGreyMaterial.locksAmbientWithDiffuse   = true
-//        
-//        
-//        
-//        let sideLen:CGFloat = 5.0
-//        let chamfer:CGFloat = 1.0
-//
-//        let trueCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
-//        let whiteCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: 1.0)
-//        let greenCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
-//        let yellowCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
-//        let blueCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
-//        let redCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
-//        let orangeCenter = SCNBox(width: sideLen, height: sideLen, length: sideLen, chamferRadius: chamfer)
+        // set up the vector witht the cube's position
+        let ourCubePos:SCNVector3 = SCNVector3Make(cubeX, cubeY, cubeZ)
+        // define the rubicks cube
+        let ourCube:rubicksCube = rubicksCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
         
-        
-        
-//        trueCenter.firstMaterial = darkGreyMaterial
-//        whiteCenter.materials = [whiteMaterial, blackMaterial, blackMaterial, blackMaterial, blackMaterial, blackMaterial]
-//        greenCenter.materials = [blackMaterial, greenMaterial, blackMaterial, blackMaterial, blackMaterial, blackMaterial]
-//        yellowCenter.materials = [blackMaterial, blackMaterial, yellowMaterial, blackMaterial, blackMaterial, blackMaterial]
-//        blueCenter.materials = [blackMaterial, blackMaterial, blackMaterial, blueMaterial, blackMaterial, blackMaterial]
-//        redCenter.materials = [blackMaterial, blackMaterial, blackMaterial, blackMaterial, redMaterial, blackMaterial]
-//        orangeCenter.materials = [blackMaterial, blackMaterial, blackMaterial, blackMaterial, blackMaterial, orangeMaterial]
-        
-        
-        //boxGeometry.materials = [whiteMaterial, greenMaterial, yellowMaterial, blueMaterial, redMaterial, orangeMaterial]
-        
-        
-        
-        let boxNode = SCNNode(geometry: trueCenter)
-        
-        
-        boxNode.position = SCNVector3(x:0, y:0, z:-20)
-        
-        let trueCenterNode = SCNNode(geometry: trueCenter)
-        
-        
-//        
-//        let whiteCenterNode = SCNNode(geometry: whiteCenter)
-//        let greenCenterNode = SCNNode(geometry: greenCenter)
-//        let yellowCenterNode = SCNNode(geometry: yellowCenter)
-//        let blueCenterNode = SCNNode(geometry: blueCenter)
-//        let redCenterNode = SCNNode(geometry: redCenter)
-//        let orangeCenterNode = SCNNode(geometry: orangeCenter)
-        
-
-
-        
-        let centerX:Float = 0.0
-        let centerY:Float = 0.0
-        let centerZ:Float = -20.0
-        
-//        let centerDist:Float = Float(sideLen)
-        
-        trueCenterNode.position = SCNVector3(x: centerX, y: centerY, z: centerZ)
-//        whiteCenterNode.position = SCNVector3(x: 0, y: 0, z: 0 + centerDist)
-//        greenCenterNode.position = SCNVector3(x: 0 + centerDist, y: 0, z: 0)
-//        yellowCenterNode.position = SCNVector3(x: 0, y: 0, z: 0 - centerDist)
-//        blueCenterNode.position = SCNVector3(x: 0 - centerDist, y: 0, z: 0)
-//        redCenterNode.position = SCNVector3(x: 0, y: 0 + centerDist, z: 0)
-//        orangeCenterNode.position = SCNVector3(x: 0, y: 0 - centerDist, z: 0)
-        
-        
-        
-        
+        // extra node (MAY DELETE)
         let itemNode = SCNNode()
         
+
+        // add cube node to item node
+        itemNode.addChildNode(ourCube.cubeNode)
         
-        //        boxNode.addChildNode(xNode)
-        //        boxNode.addChildNode(xPointNode)
-        //        boxNode.addChildNode(yNode)
-        //        boxNode.addChildNode(yPointNode)
-        //        boxNode.addChildNode(zNode)
-        //        boxNode.addChildNode(zPointNode)
-        
-        trueCenterNode.addChildNode(whiteCenterNode)
-        itemNode.addChildNode(greenCenterNode)
-        trueCenterNode.addChildNode(yellowCenterNode)
-        trueCenterNode.addChildNode(blueCenterNode)
-        trueCenterNode.addChildNode(redCenterNode)
-        trueCenterNode.addChildNode(orangeCenterNode)
-        
-        itemNode.addChildNode(trueCenterNode)
+       
         
         
+        
+        
+//        
+//        let testMaterial = makeMaterials()[1]
+//        let testPos = SCNVector3(0,0,0)
+//        let testPanel:panel = panel(material: testMaterial, pos: testPos, thickness: 2, squareLen: 5)
+//        
+//        ourCube.cubeNode.addChildNode(testPanel.panelNode)
+//        
+        
+        
+        
+        
+//        
+//        // create test face
+//        let testFace:face = face(dim: dimensionOfCube, faceThickness: 0.1, cubeSideLen: rubicksCubeSideLen)
+//        
+//        
+//        
+//        // add cube node to item node
+//        ourCube.cubeNode.addChildNode(testFace.faceNode)
+//        
+//        
+//        
+        
+        
+        // add item node to root node
         scene.rootNode.addChildNode(itemNode)
+        
+        
+        
         
         // create and add a camera to the scene
         let cameraNode = SCNNode()
@@ -391,12 +590,6 @@ class GameViewController: UIViewController {
         ambientLightNode.light!.type = .ambient
         ambientLightNode.light!.color = UIColor.white
         scene.rootNode.addChildNode(ambientLightNode)
-        
-        // retrieve the ship node
-        //        let ship = scene.rootNode.childNode(withName: "ship", recursively: true)!
-        
-        // animate the 3d object
-        //        ship.runAction(SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: 0.5, z: 0, duration: 1)))
         
         // retrieve the SCNView
         let scnView = self.view as! SCNView
@@ -472,39 +665,10 @@ class GameViewController: UIViewController {
                 
                 SCNTransaction.commit()
             }
+
             
             
-            
-            //material.diffuse.contents = newMaterial.diffuse.contents
-            
-            
-            
-            
-//            ref?.child("Faces").child("face" + String(result.geometryIndex)).setValue(newIndex)
-            //SCNAction.rotate(by: 3.14/2.0, around: result.node!.eulerAngles, duration: 1)
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            //result.node!.runAction(SCNAction.rotateBy(x: 0, y: 3.14/2.0, z: 0, duration: 1))
-            
-            
-            result.node!.pivot = SCNMatrix4Rotate(result.node!.pivot, 10, 10, 10, 10)
-//            result.node!.runAction(SCNAction.rotateBy(x: 0, y: 3.14/2.0, z: 0, duration: 1))
-            
-            
-            //result.node!.runAction(SCNAction)
-            
-            
-            //result.node!.runAction(SCNAction.rotateBy(x: 3.14/2.0, y: 0, z: 0, duration: 1))
+            result.node!.runAction(SCNAction.rotateBy(x: 0, y: 3.14/2.0, z: 0, duration: 1))
             
             SCNTransaction.commit()
         }
