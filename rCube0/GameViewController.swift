@@ -12,6 +12,8 @@ import SceneKit
 //import FirebaseDatabase
 
 
+
+// function for scaling all components of a three-diensional vector
 func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
     var vecToMut = vec
     
@@ -21,6 +23,59 @@ func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
     
     return vecToMut
 }
+
+
+
+func makeVecWithCoordString(coordAsString: String) -> SCNVector3 {
+    
+    return makeVecWithCoordinateArray(coord: (makeCorrdArrayWithCoordString(coordString: coordAsString)))
+}
+
+
+func makeCorrdArrayWithCoordString(coordString: String) -> [Float] {
+    
+    
+    var coordinates:[Float] = []
+    
+    var currentCoord:String = ""
+    
+    for i in coordString.characters {
+        
+        if i ==  "," || i == ")" {
+            
+            coordinates.append(Float(currentCoord)!)
+            currentCoord = ""
+        }
+        else if i != "(" {
+            
+            currentCoord.append(i)
+            
+        }
+    }
+    
+    return coordinates
+    
+    
+}
+
+func makeVecWithCoordinateArray(coord: [Float]) -> SCNVector3 {
+    
+    
+    
+    let vec:SCNVector3 = SCNVector3(coord[0], coord[1], coord[2])
+    
+    return vec
+    
+}
+
+
+
+func makeCoordStringWithCoordArray(coordArray: [Float]) -> String {
+    
+    return "(" + String(Int(coordArray[0])) +  "," + String(Int(coordArray[1])) +  "," + String(Int(coordArray[2])) +  ")"
+    
+}
+
 
 
 func makeMaterials() -> [SCNMaterial]{
@@ -40,34 +95,6 @@ func makeMaterials() -> [SCNMaterial]{
 }
 
 
-enum cubieType {
-    case trueCenter, faceCenter, corner, edge
-}
-
-
-enum faceType {
-    case white, green, yellow, blue, red, orange
-}
-
-
-
-
-
-
-
-
-let colorCodes = [
-    "posZ": "100000",
-    "negZ": "001000",
-    
-    
-    "posX": "010000",
-    "negX": "000100",
-    
-    "posY": "000010",
-    "negY": "000001",
-
-]
 
 
 
@@ -95,12 +122,19 @@ let colorCodes = [
 //    return uniqueMaterials
 //}
 
+let bigMaterialArray = makeMaterials()
+
+let colorDict:[String: SCNMaterial] = [
+
+    "(1,0,0)" : bigMaterialArray[1],
+    "(-1,0,0)" : bigMaterialArray[3],
+    "(0,1,0)" : bigMaterialArray[4],
+    "(0,-1,0)" : bigMaterialArray[5],
+    "(0,0,1)" : bigMaterialArray[0],
+    "(0,0,-1)" : bigMaterialArray[2],
 
 
-
-
-
-
+]
 
 
 //consider forming single class with cubie
@@ -109,12 +143,15 @@ class panel {
     var panelNode:SCNNode
     
     
-    init(material:SCNMaterial, pos:SCNVector3, thickness:CGFloat, squareLen:CGFloat, chamfer:CGFloat) {
+    init(materialCode:String, pos:SCNVector3, thickness:CGFloat, squareLen:CGFloat, chamfer:CGFloat) {
         
         
         let panel = SCNBox(width: squareLen, height: squareLen, length: thickness, chamferRadius: chamfer)
         
-        panel.firstMaterial = material
+        
+        
+        print(materialCode)
+        panel.firstMaterial = colorDict[materialCode]
         
         panelNode = SCNNode(geometry: panel)
         panelNode.position = pos
@@ -135,10 +172,14 @@ class cubie {
     // node of cube to be attatched to the parent node of a face
     var node:SCNNode
     
-    
+    // side length of a single cubie
+    private let side:CGFloat
     
     
     init(pos:SCNVector3, sideLen:CGFloat) {
+        
+        
+        side = sideLen
         
         // use makeMaterials function to get an array of materials
         let materials = makeMaterials()
@@ -161,17 +202,101 @@ class cubie {
     
     
     
-    // TODO: find out if these functions are needed
+    // get the position of the cubie
     func getPos() -> SCNVector3 {
         
         return node.position
     }
     
-//    func setPos(newPos:SCNVector3) {
-//        
-//        self.node.position = scaleVector(vec: newPos, scalingFactor: sideLen)
-//        
-//    }
+    
+    
+    func addPanels(theCoordString:String, magToCompare:Int, thicc:CGFloat) {
+
+        
+        
+        var coordinates:[Int] = []
+        
+        var currentCoord:String = ""
+        
+        for i in theCoordString.characters {
+            
+            if i ==  "," || i == ")" {
+                coordinates.append(Int(currentCoord)!)
+                currentCoord = ""
+            }
+            else if i != "(" {
+                
+                currentCoord.append(i)
+                
+            }
+        }
+        
+        
+
+        
+        for i in 0 ... (coordinates.count - 1) {
+            
+            
+            
+            if abs(coordinates[i])/magToCompare == 1 {
+                
+                
+                
+                
+                let unitCoord:Int = coordinates[i]/magToCompare
+                
+                // TODO: fix the indexing
+                
+                
+                
+                var arrayRepOfPanelCoord:[Float] = [0, 0, 0]
+                
+                arrayRepOfPanelCoord[i] = Float(unitCoord)
+                
+                
+                
+
+                let panelUnitVec:SCNVector3 = makeVecWithCoordinateArray(coord: arrayRepOfPanelCoord)
+
+                
+                let stringRepOfPanelCoord = makeCoordStringWithCoordArray(coordArray: arrayRepOfPanelCoord)
+                
+                
+                let panelPos:SCNVector3 = scaleVector(vec: panelUnitVec, scalingFactor: Float(side)/2)
+                let pan:panel = panel(materialCode: stringRepOfPanelCoord, pos: panelPos, thickness: thicc, squareLen: side * 0.9, chamfer: 0.05)
+                
+                
+                
+                var arrayRepOfOrientation:[Float] = [0,0,0]
+                
+                if abs(arrayRepOfPanelCoord[0]) == 1 {
+                    arrayRepOfOrientation[1] = 3.14/2.0
+                }
+                else if abs(arrayRepOfPanelCoord[1]) == 1 {
+                    arrayRepOfOrientation[0] = 3.14/2.0
+                }
+                else {
+                    arrayRepOfOrientation[2] = 3.14/2.0
+                }
+                
+                
+                
+
+                pan.panelNode.eulerAngles = makeVecWithCoordinateArray(coord: arrayRepOfOrientation)
+
+                
+                
+                
+                node.addChildNode(pan.panelNode)
+            }
+        
+        
+        
+            
+        }
+        
+        
+    }
     
 }
 
@@ -216,7 +341,7 @@ class rotationGroup {
             
         }
         
-        groupNode.runAction(SCNAction.rotate(by: 3.14/2.0, around: axis, duration: 3))
+        groupNode.runAction(SCNAction.rotate(by: -6.28, around: axis, duration: 3))
         
         
         
@@ -226,11 +351,7 @@ class rotationGroup {
 }
 
 
-// TODO: find a good place for this definition
-let sides:[String] = ["front", "back", "left", "right", "top", "bottom"]
-
-
-class rubicksCube {
+class customCube {
     
     // the representation where rotations will occur on the back end
     var cubieCoordMap: [String : Int] = [:]
@@ -243,6 +364,10 @@ class rubicksCube {
     
     let cubeNode:SCNNode = SCNNode()
     
+    
+    
+    var max:Int
+    
     init(cubeSideLen:CGFloat, numCubiesPerSide:Int, cubePos:SCNVector3) {
         
         // side length of each individual cubie based on the desired size of the whole cube as well as the number of cubes used
@@ -251,42 +376,7 @@ class rubicksCube {
         // create initial node for the cube that will be attached to no geometry
         
         cubeNode.position = cubePos
-        
-        // create nodes for each of the rotation groups
-        // TODO: actually use these nodes
-        
-        
-        for side in sides {
-            
-            var rotAxis:SCNVector3
-            
-            if side == "front" || side == "back" {
-                rotAxis = SCNVector3(0,0,1)
-            }
-            
-            else if side == "left" || side == "right" {
-                rotAxis = SCNVector3(1,0,0)
-            }
-            
-            else {
-                rotAxis = SCNVector3(0,1,0)
-            }
-            
-            
-            
-            let rotGroup:rotationGroup = rotationGroup(vec: rotAxis)
-            rotiationGroupMap[side] = rotGroup
-            cubeNode.addChildNode(rotGroup.getNode())
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         // used for cubieCoordMap
         var cubieCount:Int = 0
@@ -294,18 +384,15 @@ class rubicksCube {
         // maximum coordinate magnitude
         let maxCoordMag = numCubiesPerSide/2
         
+        
+        // FIX
+        max = maxCoordMag
+        
         // loop through all possible coordinates
         // TODO: make sure this works for even numbers of numCubiesPerSide
-        for coord1 in -maxCoordMag ... maxCoordMag {
+        for coord1 in [-maxCoordMag ... maxCoordMag {
             for coord2 in -maxCoordMag ... maxCoordMag {
                 for coord3 in -maxCoordMag ... maxCoordMag {
-                    
-                    
-                    
-                    
-                    
-                    
-                    
                     
                     // set the position of each cubie based on the coordinates
                     
@@ -326,111 +413,13 @@ class rubicksCube {
                     
                     let faceThickness:CGFloat = 0.1
                     
-                    
-                    //                    var panelCoordArray:[Int] = [Int]()
-                    //                    let coordArray = [coord1,coord2,coord3]
-                    //
-                    //                    for i in 0...2 {
-                    //                        panelCoordArray.append(coordArray[i]/maxCoordMag)
-                    //                    }
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    if abs(coord1)/maxCoordMag == 1 {
-                        
-                        
-                        
-                        
-                        let unitCoord:Int = coord1/maxCoordMag
-                        
-                        // NOTE THIS IS SUBJECT TO CHANGE
-                        let faceMaterial = faceMaterials[-unitCoord + 2]
-                        
-                        let panelUnitVec1:SCNVector3 = SCNVector3(Float(unitCoord), 0, 0)
-                        let panelPos1:SCNVector3 = scaleVector(vec: panelUnitVec1, scalingFactor: Float(cubieSideLen)/2)
-                        let pan1:panel = panel(material: faceMaterial, pos: panelPos1, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
-                        
-                        pan1.panelNode.eulerAngles = SCNVector3(0,3.14/2,0)
-                        
-                        cub.node.addChildNode(pan1.panelNode)
-                    }
-                    
-                    
-                    
-                    
-                    
-                    if abs(coord2)/maxCoordMag == 1 {
-                        
-                        let unitCoord:Int = coord2/maxCoordMag
-                        
-                        // NOTE THIS IS SUBJECT TO CHANGE
-                        let faceMaterial = faceMaterials[Int(-(Float(unitCoord)/2.0) + 4.5)]
-                        
-                        let panelUnitVec2:SCNVector3 = SCNVector3(0, Float(unitCoord), 0)
-                        let panelPos2:SCNVector3 = scaleVector(vec: panelUnitVec2, scalingFactor: Float(cubieSideLen)/2)
-                        let pan2:panel = panel(material: faceMaterial, pos: panelPos2, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
-                        
-                        pan2.panelNode.eulerAngles = SCNVector3(3.14/2,0,0)
-                        
-                        cub.node.addChildNode(pan2.panelNode)
-                    }
-                    
-                    
-                    
-                    
-                    if abs(coord3)/maxCoordMag == 1 {
-                        
-                        let unitCoord:Int = coord3/maxCoordMag
-                        
-                        // NOTE THIS IS SUBJECT TO CHANGE
-                        let faceMaterial = faceMaterials[-(unitCoord - 1)]
-                        
-                        let panelUnitVec3:SCNVector3 = SCNVector3(0, 0, Float(unitCoord))
-                        let panelPos3:SCNVector3 = scaleVector(vec: panelUnitVec3, scalingFactor: Float(cubieSideLen)/2)
-                        let pan3:panel = panel(material: faceMaterial, pos: panelPos3, thickness: faceThickness, squareLen: cubieSideLen * 0.9, chamfer: 0.05)
-                        cub.node.addChildNode(pan3.panelNode)
-
-                    }
-                    
-                    
-
-                    
-//                    let panelUnitVec1:SCNVector3 = SCNVector3(Float(panelCoordArray[0]), 0, 0)
-//                    let panelPos1:SCNVector3 = scaleVector(vec: panelUnitVec1, scalingFactor: Float(cubieSideLen))
-                    
-//                    let panelUnitVec2:SCNVector3 = SCNVector3(0, Float(panelCoordArray[1]), 0)
-//                    let panelPos2:SCNVector3 = scaleVector(vec: panelUnitVec2, scalingFactor: Float(cubieSideLen))
-                    
-//                    let panelUnitVec3:SCNVector3 = SCNVector3(0, 0, Float(panelCoordArray[2]))
-//                    let panelPos3:SCNVector3 = scaleVector(vec: panelUnitVec3, scalingFactor: Float(cubieSideLen))
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-
+                
                     
                     // add that cubie to the rubicks cube node
                     cubeNode.addChildNode(cub.node)
                     
                     // string representation of coordinates
-                    let coordString = String(coord1) + "," + String(coord2) + "," + String(coord3)
+                    let coordString = "(" + String(coord1) + "," + String(coord2) + "," + String(coord3) + ")"
                     
                     // place cubie integer representation in map of cubies
                     cubieCoordMap[coordString] = cubieCount
@@ -443,40 +432,48 @@ class rubicksCube {
                     
                     
                     
+                    cub.addPanels(theCoordString: coordString, magToCompare: maxCoordMag, thicc: faceThickness)
                     
                     
                     
                     
-                    if coord1/maxCoordMag == 1 {
+                    
+                    let rotCoordString1 = "(" + String(coord1) + ",0,0)"
+                    let rotCoordString2 =  "(0," + String(coord2) + ",0)"
+                    let rotCoordString3 = "(0,0," + String(coord3) + ")"
+                    
+                    let rotCoordStrings = [rotCoordString1, rotCoordString2, rotCoordString3]
+                    
+                    
+                    for rotCoordString in rotCoordStrings {
                         
-                        let rotCoordString = String(-coord3) + "," + String(coord2)
-                        rotiationGroupMap["left"]?.setCubie(cubieCode: rotCoordString, newCubie: cub)
-                    }
-                    if coord1/maxCoordMag == -1 {
                         
-                        let rotCoordString = String(coord3) + "," + String(coord2)
-                        rotiationGroupMap["right"]?.setCubie(cubieCode: rotCoordString, newCubie: cub)
-                    }
-                    if coord2/maxCoordMag == 1 {
+                        if rotiationGroupMap[rotCoordString] == nil {
+                            
+                            
+                            
+
+                            let axis = makeVecWithCoordString(coordAsString: rotCoordString)
+                            
+                            
+                            let newRotGroup:rotationGroup = rotationGroup(vec: axis)
+                            
+                            rotiationGroupMap[rotCoordString] = newRotGroup
+                            
+                            cubeNode.addChildNode(newRotGroup.getNode())
+                            
+                            
+                            
+                        }
                         
-                        let rotCoordString = String(coord1) + "," + String(-coord3)
-                        rotiationGroupMap["top"]?.setCubie(cubieCode: rotCoordString, newCubie: cub)
-                    }
-                    if coord2/maxCoordMag == -1 {
+                        rotiationGroupMap[rotCoordString]?.setCubie(cubieCode: coordString, newCubie: cub)
                         
-                        let rotCoordString = String(coord1) + "," + String(coord3)
-                        rotiationGroupMap["bottom"]?.setCubie(cubieCode: rotCoordString, newCubie: cub)
                     }
-                    if coord3/maxCoordMag == 1 {
-                        
-                        let rotCoordString = String(coord1) + "," + String(coord2)
-                        rotiationGroupMap["front"]?.setCubie(cubieCode: rotCoordString, newCubie: cub)
-                    }
-                    if coord3/maxCoordMag == -1 {
-                        
-                        let rotCoordString = String(coord1) + "," + String(-coord2)
-                        rotiationGroupMap["back"]?.setCubie(cubieCode: rotCoordString, newCubie: cub)
-                    }
+                    
+                    
+                    
+                    
+                    
                     
                 }
             }
@@ -486,55 +483,81 @@ class rubicksCube {
         
     }
     
-    func rotate(side:String) {
+    
+    func rotate(groupName:String) {
         
-        rotiationGroupMap[side].rotate()
+        self.rotiationGroupMap[groupName]?.rotate()
+        
+        
+//        for (key, group) in rotiationGroupMap {
+//            
+//            
+//            var groupNameAsArray = makeCorrdArrayWithCoordString(coordString: groupName)
+//            
+//            var keyAsArray = makeCorrdArrayWithCoordString(coordString: key)
+//            
+//            
+//            
+//            
+//            var fixed:Int = []
+//            
+//            
+//            for i in 0...3 {
+//            
+//                fixed.append(groupNameAsArray[i] + keyAsArray[i])
+//            }
+//            
+//            
+//            
+//            
+//        }
+        
         
         
     }
     
+
+    
+}
+
+
+
+class rubicksCube: customCube {
+    
+    init() {
+        let position:SCNVector3 = SCNVector3(0.0, 0.0, -20.0)
+        super.init(cubeSideLen: 10, numCubiesPerSide: 3, cubePos: position)
+    }
+    
+    // TODO: consider moving where the rotation function is defined
     func rotateFront() {
-        
-        
-        
-        
-        
-        
-        
-        rotiationGroupMap["front"].rotate()
-        
-        
+        self.rotate(groupName: "(0,0,1)")
     }
     
     func rotateBack() {
-        
-        rotiationGroupMap["back"].rotate()
+        self.rotate(groupName: "(0,0,-1)")
     }
     
     func rotateLeft() {
-        
-        
-        rotiationGroupMap["left"].rotate()
+        self.rotate(groupName: "(-1,0,0)")
     }
     
     func rotateRight() {
-        
-        rotiationGroupMap["right"].rotate()
+        self.rotate(groupName: "(1,0,0)")
     }
     
     func rotateTop() {
-        
-        rotiationGroupMap["top"].rotate()
+        self.rotate(groupName: "(0,1,0)")
     }
     
     func rotateBottom() {
-        
-        rotiationGroupMap["bottom"].rotate()
-        
+        self.rotate(groupName: "(0,-1,0)")
     }
     
-}
     
+    
+    
+}
     
 
 
@@ -562,24 +585,35 @@ class GameViewController: UIViewController {
         let scene = SCNScene()
         
         
-        // conveniece placement of rubicks cube properties
-        let cubeX:Float = 0.0
-        let cubeY:Float = 0.0
-        let cubeZ:Float = -20.0
-        //let cubieCurve:CGFloat = 0.5
-        let rubicksCubeSideLen:CGFloat = 10
-        let dimensionOfCube:Int = 3
+//        // conveniece placement of rubicks cube properties
+//        let cubeX:Float = 0.0
+//        let cubeY:Float = 0.0
+//        let cubeZ:Float = -20.0
+//        //let cubieCurve:CGFloat = 0.5
+//        let rubicksCubeSideLen:CGFloat = 10
+//        let dimensionOfCube:Int = 3
+//
+//        
+//        // set up the vector witht the cube's position
+//        let ourCubePos:SCNVector3 = SCNVector3Make(cubeX, cubeY, cubeZ)
+        
+        
+        // define the rubicks cube
+        //let ourCube:rubicksCube = rubicksCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
+        let ourCube:rubicksCube = rubicksCube()
+        
 
         
-        // set up the vector witht the cube's position
-        let ourCubePos:SCNVector3 = SCNVector3Make(cubeX, cubeY, cubeZ)
-        // define the rubicks cube
-        let ourCube:rubicksCube = rubicksCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 5
+        ourCube.rotateRight()
+        SCNTransaction.commit()
         
         
-        ourCube.rotiationGroupMap["left"]?.rotate()
+
         
-        //ourCube.rotiationGroupMap["back"]?.rotate()
+        //ourCube.rotateTop()
+        
         
         // extra node (MAY DELETE)
         let itemNode = SCNNode()
