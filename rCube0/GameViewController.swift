@@ -13,6 +13,9 @@ import SceneKit
 
 
 
+
+let rotateTime:TimeInterval = 1
+
 // function for scaling all components of a three-diensional vector
 func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
     var vecToMut = vec
@@ -25,6 +28,18 @@ func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
 }
 
 
+
+func addVecs(vec1:SCNVector3, vec2:SCNVector3) -> SCNVector3 {
+    
+    var newVec:SCNVector3 = vec1
+    
+    newVec.x = vec1.x + vec2.x
+    newVec.y = vec1.y + vec2.y
+    newVec.z = vec1.z + vec2.z
+    
+    return newVec
+    
+}
 
 func makeVecWithCoordString(coordAsString: String) -> SCNVector3 {
     
@@ -89,6 +104,8 @@ func makeMaterials() -> [SCNMaterial]{
         material.locksAmbientWithDiffuse = true
         
         materials.append(material)
+        
+        //print("index", colors.index(of: i), "gives color ", i)
     }
     
     return materials
@@ -150,7 +167,6 @@ class panel {
         
         
         
-        print(materialCode)
         panel.firstMaterial = colorDict[materialCode]
         
         panelNode = SCNNode(geometry: panel)
@@ -308,7 +324,7 @@ class cubie {
 
 class rotationGroup {
     
-    private var cubieMap: [String : cubie] = [:]
+    var cubieMap: [String : cubie] = [:]
     
     private let groupNode = SCNNode()
     
@@ -336,13 +352,127 @@ class rotationGroup {
         // TODO: implement rotation function that will add all member cubies to the rotation group's node and then rotate the node
         
         
+        
+        
         for (key, cubie) in cubieMap {
+            //print("group ", axis, " has member with key ", key, " and position ", cubie.getPos())
+            
+            cubie.node.removeFromParentNode()
             groupNode.addChildNode(cubie.node)
             
         }
         
-        groupNode.runAction(SCNAction.rotate(by: -6.28, around: axis, duration: 3))
         
+        
+        
+        groupNode.runAction(SCNAction.rotate(by: -3.14/2.0, around: axis, duration: rotateTime))
+        
+        
+        
+        
+        //        let when = DispatchTime.now() + 4 // change 2 to desired number of seconds
+        //
+        //
+        //        DispatchQueue.main.asyncAfter(deadline: when) {
+        //            // Your code with delay
+        //            ourCube.rotateTop()
+        //            
+        //        }
+        
+        
+        //Thread.sleep(forTimeInterval: 40)
+        
+
+        
+        let when = DispatchTime.now() + rotateTime  + 1 // change 2 to desired number of seconds
+        
+        
+        DispatchQueue.main.asyncAfter(deadline: when) {
+            // Your code with delay
+            self.reset()
+            
+        }
+        
+        
+    }
+    
+    
+    
+    func reset() {
+        
+        
+        var angles:SCNVector3 = groupNode.eulerAngles
+        if abs(axis.y) == 1 {
+            
+
+            angles.y = -angles.y
+
+        }
+        
+        
+        print("group node euler angles: ", groupNode.eulerAngles)
+        print("y-adjusted euler angles: ", angles)
+        
+        for (key, cubie) in cubieMap {
+
+            
+            
+            print("key: ", key)
+            
+            for n in cubie.node.childNodes {
+                print(n.geometry?.firstMaterial?.diffuse.contents)
+            }
+            
+            
+            print("position of cubie: ", cubie.getPos())
+            
+            
+
+            
+            let newGlobalPos:SCNVector3 = cubie.node.convertPosition(SCNVector3(0,0,0), to: groupNode.parent)
+            print("global position of cubie: ", newGlobalPos)
+
+            
+            cubie.node.removeFromParentNode()
+            
+
+            // TODO: reimplement the setPos member function of the cubie class
+            
+            print("global position of cubie: ", newGlobalPos)
+            
+            cubie.node.position = newGlobalPos
+            
+            
+            print("global position of cubie: ", cubie.getPos())
+            
+            
+            //cubie.node
+            
+            //print("current pivot: ", cubie.node.pivot)
+            
+            //cubie.node.pivot = SCNMatrix4Rotate(cubie.node.pivot, 3.14/2.0, axis.x, axis.y, axis.z)
+            
+            
+            
+                
+            
+            //print("new pivot: ", cubie.node.pivot)
+            cubie.node.eulerAngles = addVecs(vec1: cubie.node.eulerAngles  , vec2: angles)
+            
+
+            
+            
+            cubie.node.removeFromParentNode()
+            
+            groupNode.parent?.addChildNode(cubie.node)
+
+            
+            
+            
+            
+        }
+        
+        groupNode.eulerAngles = SCNVector3(0,0,0)
         
         
     }
@@ -390,9 +520,16 @@ class customCube {
         
         // loop through all possible coordinates
         // TODO: make sure this works for even numbers of numCubiesPerSide
-        for coord1 in [-maxCoordMag ... maxCoordMag {
+        for coord1 in -maxCoordMag ... maxCoordMag {
             for coord2 in -maxCoordMag ... maxCoordMag {
                 for coord3 in -maxCoordMag ... maxCoordMag {
+                    
+                    // TODO: figure out how to make odd cubes
+                    //if (numCubiesPerSide % 2) == 0 &&
+                    
+                    if (abs(coord1) < maxCoordMag) && (abs(coord2) < maxCoordMag) && (abs(coord3) < maxCoordMag) {
+                        continue
+                    }
                     
                     // set the position of each cubie based on the coordinates
                     
@@ -486,31 +623,135 @@ class customCube {
     
     func rotate(groupName:String) {
         
+        
+        
+        
+        // rotate the rotation group
         self.rotiationGroupMap[groupName]?.rotate()
         
         
-//        for (key, group) in rotiationGroupMap {
-//            
-//            
-//            var groupNameAsArray = makeCorrdArrayWithCoordString(coordString: groupName)
-//            
-//            var keyAsArray = makeCorrdArrayWithCoordString(coordString: key)
-//            
-//            
-//            
-//            
-//            var fixed:Int = []
-//            
-//            
-//            for i in 0...3 {
-//            
-//                fixed.append(groupNameAsArray[i] + keyAsArray[i])
-//            }
-//            
-//            
-//            
-//            
-//        }
+        // the following steps are taken to reset which cubies are in which rotation groups
+        
+        // start by turning the rotation group name into an array
+        var groupNameAsArray = makeCorrdArrayWithCoordString(coordString: groupName)
+        
+        
+        // declare the index that's fixed
+        var fixedIndex:Int = 0
+        
+        
+        
+        // find that index
+        for i in 0 ... groupNameAsArray.count {
+            
+            if groupNameAsArray[i] != 0 {
+                fixedIndex = i
+                
+                break
+                
+                
+            }
+            
+        }
+        
+        
+        //print("fixed index: ", fixedIndex)
+        
+        //print("group name: ", groupName)
+        
+        
+//        
+//        let pairToTransform = [Int(groupNameAsArray[(fixedIndex+1)%3]), Int(groupNameAsArray[(fixedIndex+2)%3])]
+//        
+//        
+//        
+//        // TODO: look at type casting to see if it could be reduced
+//        let transformedPair = turnTransform(coordinates: pairToTransform, axisSign: Int(groupNameAsArray[fixedIndex]))
+//        
+//        
+//        
+//        
+//        //
+        
+        
+        var newCubieMap: [String : cubie] = [:]
+        
+        
+        
+        // TODO: review all private vs public class vars
+        for (key, cubie) in (rotiationGroupMap[groupName]?.cubieMap)! {
+            
+            
+            //print("key: ", key)
+            //print("real position: ", cubie.getPos())
+            
+            // turn the key, the coordinates of the cubie in the group, into an array
+            let keyAsArray = makeCorrdArrayWithCoordString(coordString: key)
+            
+            // TODO: obsevre all conversions of coords from string to arrays and find out which way to have them to minimize transformations
+            
+            // find the coordinate array elements
+            let pairToTransform = [Int(keyAsArray[(fixedIndex+1)%3]), Int(keyAsArray[(fixedIndex+2)%3])]
+            
+            // get the pair transformed
+            let transformedPair = turnTransform(coordinates: pairToTransform, axisSign: Int(groupNameAsArray[fixedIndex]))
+            
+            
+            var transformedTriple:[Float] = [0,0,0]
+            
+            // place the transformed pair into the three-elem array for new coordinates
+            transformedTriple[fixedIndex] = groupNameAsArray[fixedIndex]
+            
+            
+            transformedTriple[(fixedIndex+1)%3] = Float(transformedPair[0])
+            transformedTriple[(fixedIndex+2)%3] = Float(transformedPair[1])
+            
+            
+            
+            //print("transformed key: ", transformedTriple)
+            
+            // the new coordinates of the moved cubie
+            let newCoordString = makeCoordStringWithCoordArray(coordArray: transformedTriple)
+            
+            //print("transformed key as string: ", newCoordString)
+            
+            
+            
+            
+            newCubieMap[newCoordString] = cubie
+            
+            
+            
+            var tripleForOtherGroup1:[Float] = [0,0,0]
+            
+            
+            tripleForOtherGroup1[(fixedIndex+1)%3] = Float(transformedPair[0])
+            
+            let stringForG1 = makeCoordStringWithCoordArray(coordArray: tripleForOtherGroup1)
+            
+            var tripleForOtherGroup2:[Float] = [0,0,0]
+            
+            
+            tripleForOtherGroup2[(fixedIndex+2)%3] = Float(transformedPair[1])
+            
+            let stringForG2 = makeCoordStringWithCoordArray(coordArray: tripleForOtherGroup2)
+            
+            
+            rotiationGroupMap[stringForG1]?.cubieMap[newCoordString] = cubie
+            rotiationGroupMap[stringForG2]?.cubieMap[newCoordString] = cubie
+            
+            
+            
+            //print("String for g1 ", stringForG1)
+            //print("String for g2 ", stringForG2)
+        }
+        
+        
+        
+        cubieMap = newCubieMap
+        
+        
+        
         
         
         
@@ -520,6 +761,15 @@ class customCube {
     
 }
 
+
+
+
+
+func turnTransform(coordinates: [Int], axisSign:Int) -> [Int] {
+    
+    
+    return [axisSign * coordinates[1], axisSign * -coordinates[0]]
+}
 
 
 class rubicksCube: customCube {
@@ -557,10 +807,31 @@ class rubicksCube: customCube {
     
     
     
+    
+    
+    
 }
     
 
-
+func executeMoves(moves:[()->()]) {
+    
+    var waitingTime:TimeInterval = 0
+    
+    for i in 0 ... (moves.count-1) {
+        
+        let when = DispatchTime.now() + waitingTime // change 2 to desired number of seconds
+        
+        
+        DispatchQueue.main.asyncAfter(deadline: when) {
+            // Your code with delay
+            moves[i]()
+            
+        }
+        
+        waitingTime += rotateTime + 2
+        
+    }
+}
 
 
 
@@ -591,29 +862,50 @@ class GameViewController: UIViewController {
 //        let cubeZ:Float = -20.0
 //        //let cubieCurve:CGFloat = 0.5
 //        let rubicksCubeSideLen:CGFloat = 10
-//        let dimensionOfCube:Int = 3
+//        let dimensionOfCube:Int = 10
 //
 //        
 //        // set up the vector witht the cube's position
 //        let ourCubePos:SCNVector3 = SCNVector3Make(cubeX, cubeY, cubeZ)
+//        
+//        
+//        // define the rubicks cube
+//        let ourCube:customCube = customCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
         
         
-        // define the rubicks cube
-        //let ourCube:rubicksCube = rubicksCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
+        
+        
         let ourCube:rubicksCube = rubicksCube()
         
 
         
-        SCNTransaction.begin()
-        SCNTransaction.animationDuration = 5
-        ourCube.rotateRight()
-        SCNTransaction.commit()
-        
-        
 
         
+        
+        
+        
+        
+        
+        //ourCube.rotateRight()
         //ourCube.rotateTop()
         
+        //ourCube.rotateBottom()
+        
+        let arrayOfMoves:[()->()] = [ourCube.rotateRight, ourCube.rotateRight]//, ourCube.rotateRight] //, ourCube.rotateRight, ourCube.rotateBack]
+        
+        
+        
+        let when = DispatchTime.now() + 5 // change 2 to desired number of seconds
+        
+        
+        DispatchQueue.main.asyncAfter(deadline: when) {
+            // Your code with delay
+            executeMoves(moves: arrayOfMoves)
+            
+        }
+
+
+
         
         // extra node (MAY DELETE)
         let itemNode = SCNNode()
