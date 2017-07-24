@@ -153,6 +153,17 @@ let colorDict:[String: SCNMaterial] = [
 
 ]
 
+let colorNameDic:[String: String] = [
+    
+    "(1,0,0)" : "Green",
+    "(-1,0,0)" : "Blue",
+    "(0,1,0)" : "Red",
+    "(0,-1,0)" : "Orange",
+    "(0,0,1)" : "White",
+    "(0,0,-1)" : "Yellow",
+    
+    
+]
 
 //consider forming single class with cubie
 class panel {
@@ -178,11 +189,6 @@ class panel {
 }
 
 
-
-
-
-
-
 class cubie {
     
     // node of cube to be attatched to the parent node of a face
@@ -193,6 +199,8 @@ class cubie {
     
     
     init(pos:SCNVector3, sideLen:CGFloat) {
+        
+        
         
         
         side = sideLen
@@ -214,6 +222,8 @@ class cubie {
         
         node = SCNNode(geometry: box)
         node.position = pos
+        
+        node.name = ""
     }
     
     
@@ -278,6 +288,9 @@ class cubie {
                 let stringRepOfPanelCoord = makeCoordStringWithCoordArray(coordArray: arrayRepOfPanelCoord)
                 
                 
+                
+                node.name?.append(colorNameDic[stringRepOfPanelCoord]!)
+                
                 let panelPos:SCNVector3 = scaleVector(vec: panelUnitVec, scalingFactor: Float(side)/2)
                 let pan:panel = panel(materialCode: stringRepOfPanelCoord, pos: panelPos, thickness: thicc, squareLen: side * 0.9, chamfer: 0.05)
                 
@@ -320,7 +333,7 @@ class cubie {
 
 
 
-
+var test = 1
 
 class rotationGroup {
     
@@ -362,37 +375,45 @@ class rotationGroup {
             
         }
         
+        print("Name: ", groupNode.childNodes[2].name)
+        print("Position before pivot: ", groupNode.childNodes[2].convertPosition(SCNVector3(0,0,0), to: groupNode.parent))
         
         
         
-        groupNode.runAction(SCNAction.rotate(by: -3.14/2.0, around: axis, duration: rotateTime))
+        let faceTurn = CABasicAnimation(keyPath: "rotation")
+        // Use from-to to explicitly make a full rotation around z
+        faceTurn.fromValue = NSValue(scnVector4: SCNVector4(x: axis.x, y: axis.y, z: axis.z, w: 0))
+        faceTurn.toValue = NSValue(scnVector4: SCNVector4(x: axis.x, y: axis.y, z: axis.z, w: Float(CGFloat(-Double.pi/2.0))))
+        faceTurn.duration = rotateTime
+        faceTurn.repeatCount = 1
+        groupNode.addAnimation(faceTurn, forKey: "spin around")
         
         
         
-        
-        //        let when = DispatchTime.now() + 4 // change 2 to desired number of seconds
-        //
-        //
-        //        DispatchQueue.main.asyncAfter(deadline: when) {
-        //            // Your code with delay
-        //            ourCube.rotateTop()
-        //            
-        //        }
-        
-        
-        //Thread.sleep(forTimeInterval: 40)
-        
-
-        
-        let when = DispatchTime.now() + rotateTime  + 1 // change 2 to desired number of seconds
+        let when = DispatchTime.now() + rotateTime // change 2 to desired number of seconds
         
         
         DispatchQueue.main.asyncAfter(deadline: when) {
             // Your code with delay
-            self.reset()
+            self.groupNode.pivot = SCNMatrix4Rotate(self.groupNode.pivot, 3.14/2.0, self.axis.x, self.axis.y, self.axis.z)
             
+            print("Position after pivot: ", self.groupNode.childNodes[2].convertPosition(SCNVector3(0,0,0), to: self.groupNode.parent))
+            
+            
+            if test < 2 {
+                self.reset()
+                test += 1
+            }
+            
+            
+        
         }
         
+        
+        //groupNode.runAction(SCNAction.rotate(by: -3.14/2.0, around: axis, duration: rotateTime))
+        
+        
+
         
     }
     
@@ -401,64 +422,53 @@ class rotationGroup {
     func reset() {
         
         
-        var angles:SCNVector3 = groupNode.eulerAngles
-        if abs(axis.y) == 1 {
-            
-
-            angles.y = -angles.y
-
-        }
         
         
-        print("group node euler angles: ", groupNode.eulerAngles)
-        print("y-adjusted euler angles: ", angles)
         
         for (key, cubie) in cubieMap {
 
             
             
-            print("key: ", key)
+            //print("key: ", key)
             
-            for n in cubie.node.childNodes {
-                print(n.geometry?.firstMaterial?.diffuse.contents)
-            }
+//            for n in cubie.node.childNodes {
+//                print(n.geometry?.firstMaterial?.diffuse.contents)
+//            }
+//            
             
-            
-            print("position of cubie: ", cubie.getPos())
+            //print("position of cubie: ", cubie.getPos())
             
             
 
             
             let newGlobalPos:SCNVector3 = cubie.node.convertPosition(SCNVector3(0,0,0), to: groupNode.parent)
-            print("global position of cubie: ", newGlobalPos)
+            //print("global position of cubie: ", newGlobalPos)
 
             
-            cubie.node.removeFromParentNode()
+            //cubie.node.removeFromParentNode()
             
 
             // TODO: reimplement the setPos member function of the cubie class
             
-            print("global position of cubie: ", newGlobalPos)
+            //print("global position of cubie: ", newGlobalPos)
             
             cubie.node.position = newGlobalPos
             
             
-            print("global position of cubie: ", cubie.getPos())
+            //print("global position of cubie: ", cubie.getPos())
             
             
-            //cubie.node
+            //cubie.node.orientation
             
             //print("current pivot: ", cubie.node.pivot)
             
-            //cubie.node.pivot = SCNMatrix4Rotate(cubie.node.pivot, 3.14/2.0, axis.x, axis.y, axis.z)
+            cubie.node.pivot = SCNMatrix4Rotate(cubie.node.pivot, 3.14/2.0, axis.x, axis.y, axis.z)
             
-            
+            //print("position post pivot change: ", cubie.node.position)
             
                 
             
             //print("new pivot: ", cubie.node.pivot)
-            cubie.node.eulerAngles = addVecs(vec1: cubie.node.eulerAngles  , vec2: angles)
-            
 
             
             
@@ -471,8 +481,8 @@ class rotationGroup {
             
             
         }
-        
-        groupNode.eulerAngles = SCNVector3(0,0,0)
+        self.groupNode.pivot = SCNMatrix4Rotate(self.groupNode.pivot, -3.14/2.0, self.axis.x, self.axis.y, self.axis.z)
+        //groupNode.eulerAngles = SCNVector3(0,0,0)
         
         
     }
@@ -748,7 +758,7 @@ class customCube {
         
         
         
-        cubieMap = newCubieMap
+        rotiationGroupMap[groupName]?.cubieMap = newCubieMap
         
         
         
@@ -828,12 +838,10 @@ func executeMoves(moves:[()->()]) {
             
         }
         
-        waitingTime += rotateTime + 2
+        waitingTime += rotateTime + 5
         
     }
 }
-
-
 
 class GameViewController: UIViewController {
     
@@ -891,7 +899,7 @@ class GameViewController: UIViewController {
         
         //ourCube.rotateBottom()
         
-        let arrayOfMoves:[()->()] = [ourCube.rotateRight, ourCube.rotateRight]//, ourCube.rotateRight] //, ourCube.rotateRight, ourCube.rotateBack]
+        let arrayOfMoves:[()->()] = [ourCube.rotateRight, ourCube.rotateRight, ourCube.rotateRight] //, ourCube.rotateRight, ourCube.rotateBack]
         
         
         
