@@ -13,8 +13,15 @@ import SceneKit
 
 
 
+var initialTime:DispatchTime = DispatchTime(uptimeNanoseconds: 0)
+let rotateTime:TimeInterval = 0
+let rotateTimeWait:Double = 6
+let resetTimeWait:Double = 4
 
-let rotateTime:TimeInterval = 1
+
+
+
+var rotationAndResetComplete:Bool = true
 
 // function for scaling all components of a three-diensional vector
 func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
@@ -38,6 +45,42 @@ func addVecs(vec1:SCNVector3, vec2:SCNVector3) -> SCNVector3 {
     newVec.z = vec1.z + vec2.z
     
     return newVec
+    
+}
+
+func addQuaternions(q1:SCNQuaternion, q2:SCNQuaternion) -> SCNQuaternion {
+    
+    var newQ:SCNQuaternion = q1
+    
+    newQ.x = q1.x + q2.x
+    newQ.y = q1.y + q2.y
+    newQ.z = q1.z + q2.z
+    newQ.w = q1.w + q2.w
+    
+    return newQ
+    
+}
+
+
+func combineQuaternions(q1:SCNQuaternion, q2:SCNQuaternion) -> SCNQuaternion {
+    
+    var newQ:SCNQuaternion = q1
+    
+    
+    
+//    newQ.x = q1.x*q2.x - q1.y*q2.y - q1.z*q2.z - q1.w*q2.w
+//    newQ.y = q1.x*q2.y + q1.y*q2.x + q1.z*q2.w - q1.w*q2.z
+//    newQ.z = q1.x*q2.z - q1.y*q2.w + q1.z*q2.x + q1.w*q2.y
+//    newQ.w = q1.x*q2.w + q1.y*q2.z - q1.z*q2.y + q1.w*q2.x
+    
+    
+    newQ.w = q1.w*q2.w - q1.x*q2.x - q1.y*q2.y - q1.z*q2.z
+    newQ.x = q1.w*q2.x + q1.x*q2.w + q1.y*q2.z - q1.z*q2.y
+    newQ.y = q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x
+    newQ.z = q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w
+    
+    
+    return newQ
     
 }
 
@@ -366,51 +409,62 @@ class rotationGroup {
         
         
         
+        // MAJOR TODO: consider getting rid of rotation groups and using SCNACtion.group
+        
+        
+        
         
         for (key, cubie) in cubieMap {
             //print("group ", axis, " has member with key ", key, " and position ", cubie.getPos())
+            
+            
             
             cubie.node.removeFromParentNode()
             groupNode.addChildNode(cubie.node)
             
         }
         
-        print("Name: ", groupNode.childNodes[2].name)
-        print("Position before pivot: ", groupNode.childNodes[2].convertPosition(SCNVector3(0,0,0), to: groupNode.parent))
         
         
+        var actions:[SCNAction] = []
         
-        let faceTurn = CABasicAnimation(keyPath: "rotation")
-        // Use from-to to explicitly make a full rotation around z
-        faceTurn.fromValue = NSValue(scnVector4: SCNVector4(x: axis.x, y: axis.y, z: axis.z, w: 0))
-        faceTurn.toValue = NSValue(scnVector4: SCNVector4(x: axis.x, y: axis.y, z: axis.z, w: Float(CGFloat(-Double.pi/2.0))))
-        faceTurn.duration = rotateTime
-        faceTurn.repeatCount = 1
-        groupNode.addAnimation(faceTurn, forKey: "spin around")
+        actions.append(SCNAction.rotate(by: -3.14/2.0, around: axis, duration: rotateTime))
         
-        
-        
-        let when = DispatchTime.now() + rotateTime // change 2 to desired number of seconds
-        
-        
-        DispatchQueue.main.asyncAfter(deadline: when) {
-            // Your code with delay
-            self.groupNode.pivot = SCNMatrix4Rotate(self.groupNode.pivot, 3.14/2.0, self.axis.x, self.axis.y, self.axis.z)
-            
-            print("Position after pivot: ", self.groupNode.childNodes[2].convertPosition(SCNVector3(0,0,0), to: self.groupNode.parent))
-            
-            
-            if test < 2 {
-                self.reset()
-                test += 1
-            }
-            
-            
-        
-        }
-        
-        
+        //actions.append(SCNAction.wait(duration: 10))
         //groupNode.runAction(SCNAction.rotate(by: -3.14/2.0, around: axis, duration: rotateTime))
+        
+        //print("Start rotation animation: ", DispatchTime.now())
+        startRotationAnimation.append(DispatchTime.now().rawValue)
+        groupNode.runAction(SCNAction.sequence(actions), completionHandler: self.reset)
+        
+        
+        //let serialQueue = DispatchQueue(label: "queuename")
+        
+        
+        
+        
+        //serialQueue.sync() {
+//            groupNode.runAction(SCNAction.sequence(actions))
+//            print("rotation complete")
+//            self.reset()
+        //}
+        
+        
+        
+        
+//        let when = DispatchTime.now() + waitTimeForReset // change 2 to desired number of seconds
+//        
+//        
+//        DispatchQueue.main.asyncAfter(deadline: when) {
+//            // Your code with delay
+//            
+//            
+//            self.reset()
+//            
+//        }
+        
+        
+        
         
         
 
@@ -421,13 +475,22 @@ class rotationGroup {
     
     func reset() {
         
+        //print("end rotation animation: ", DispatchTime.now())
+        endRotationAnimation.append(DispatchTime.now().rawValue)
         
         
-        
+        //print("start reset: ", DispatchTime.now())
+        startReset.append(DispatchTime.now().rawValue)
         
         for (key, cubie) in cubieMap {
 
-            
+            var groupOrientation:SCNQuaternion = groupNode.orientation
+//            if abs(axis.y) == 1 {
+//                
+//                
+//                angles.y = -angles.y
+//                
+//            }
             
             //print("key: ", key)
             
@@ -462,7 +525,23 @@ class rotationGroup {
             
             //print("current pivot: ", cubie.node.pivot)
             
-            cubie.node.pivot = SCNMatrix4Rotate(cubie.node.pivot, 3.14/2.0, axis.x, axis.y, axis.z)
+            //cubie.node.pivot = SCNMatrix4Rotate(cubie.node.pivot, 3.14/2.0, axis.x, axis.y, axis.z)
+            
+            
+            
+            //print("cubie orientation: ", cubie.node.orientation)
+            //print("group orientation: ", groupOrientation)
+            
+            
+            
+            //print("combined orientation: ", addQuaternions(q1: cubie.node.orientation  , q2: groupOrientation))
+            //print("combined orientation 2: ", combineQuaternions(q1: cubie.node.orientation  , q2: groupOrientation))
+            //print(" ")
+            
+            cubie.node.orientation = combineQuaternions(q1: cubie.node.orientation  , q2: groupOrientation)//groupOrientation
+            
+            
+            
             
             //print("position post pivot change: ", cubie.node.position)
             
@@ -481,10 +560,11 @@ class rotationGroup {
             
             
         }
-        self.groupNode.pivot = SCNMatrix4Rotate(self.groupNode.pivot, -3.14/2.0, self.axis.x, self.axis.y, self.axis.z)
-        //groupNode.eulerAngles = SCNVector3(0,0,0)
+        //self.groupNode.pivot = SCNMatrix4Rotate(self.groupNode.pivot, -3.14/2.0, self.axis.x, self.axis.y, self.axis.z)
+        groupNode.orientation = SCNQuaternion(0,0,0,0)
         
-        
+        //print("end reset: ", DispatchTime.now())
+        endReset.append(DispatchTime.now().rawValue)
     }
 
 
@@ -633,8 +713,18 @@ class customCube {
     
     func rotate(groupName:String) {
         
+        //let serialQueue = DispatchQueue(label: "queuename")
         
         
+        
+        
+        //serialQueue.sync() {
+            
+        //print("start rotation function: ", DispatchTime.now())
+        startingRotationFunction.append(DispatchTime.now().rawValue)
+        
+        //print("call rotation animation function: ", DispatchTime.now())
+        callRotationAnimation.append(DispatchTime.now().rawValue)
         
         // rotate the rotation group
         self.rotiationGroupMap[groupName]?.rotate()
@@ -665,23 +755,7 @@ class customCube {
         }
         
         
-        //print("fixed index: ", fixedIndex)
         
-        //print("group name: ", groupName)
-        
-        
-//        
-//        let pairToTransform = [Int(groupNameAsArray[(fixedIndex+1)%3]), Int(groupNameAsArray[(fixedIndex+2)%3])]
-//        
-//        
-//        
-//        // TODO: look at type casting to see if it could be reduced
-//        let transformedPair = turnTransform(coordinates: pairToTransform, axisSign: Int(groupNameAsArray[fixedIndex]))
-//        
-//        
-//        
-//        
-//        //
         
         
         var newCubieMap: [String : cubie] = [:]
@@ -762,10 +836,16 @@ class customCube {
         
         
         
+        //}
         
-        
-        
+        //print("end rotation function: ", DispatchTime.now())
+        endRotationFunc.append(DispatchTime.now().rawValue)
     }
+    
+    
+    
+    
+    
     
 
     
@@ -774,6 +854,16 @@ class customCube {
 
 
 
+var rotationDispatch:[dispatch_time_t] = []
+
+var rotationFunctionFromExec:[dispatch_time_t] = []
+var startingRotationFunction:[dispatch_time_t] = []
+var callRotationAnimation:[dispatch_time_t] = []
+var startRotationAnimation:[dispatch_time_t] = []
+var endRotationFunc:[dispatch_time_t] = []
+var endRotationAnimation:[dispatch_time_t] = []
+var startReset:[dispatch_time_t] = []
+var endReset:[dispatch_time_t] = []
 
 func turnTransform(coordinates: [Int], axisSign:Int) -> [Int] {
     
@@ -825,20 +915,135 @@ class rubicksCube: customCube {
 
 func executeMoves(moves:[()->()]) {
     
-    var waitingTime:TimeInterval = 0
+    
+    //moves[i]()
+    initialTime = DispatchTime.now()
     
     for i in 0 ... (moves.count-1) {
         
-        let when = DispatchTime.now() + waitingTime // change 2 to desired number of seconds
         
-        
-        DispatchQueue.main.asyncAfter(deadline: when) {
+        //print("calling rotation dispatch from executeMoves: ", DispatchTime.now())
+        rotationDispatch.append(DispatchTime.now().rawValue)
+        DispatchQueue.main.asyncAfter(deadline: initialTime + Double(i)*rotateTimeWait + Double(i)*resetTimeWait) {//rotateTimeWait +  resetTimeWait)//TimeInterval( i*rotateTimeWait) + TimeInterval( i*resetTimeWait)) {
             // Your code with delay
+            //print("calling rotation function from executeMoves: ", DispatchTime.now())
+            rotationFunctionFromExec.append(DispatchTime.now().rawValue)
             moves[i]()
+        
+        
             
         }
         
-        waitingTime += rotateTime + 5
+        
+        
+    }
+    
+    DispatchQueue.main.asyncAfter(deadline: initialTime + Double(moves.count)*rotateTimeWait + Double(moves.count)*resetTimeWait + 10) {
+        // Your code with delay
+        //print("calling rotation function from executeMoves: ", DispatchTime.now())
+        runTimeDiagnostics()
+    }
+    
+        
+
+    
+}
+
+
+
+func runTimeDiagnostics() {
+    
+    
+    for i in 0 ... (rotationDispatch.count-1) {
+        
+        if i < rotationDispatch.count-1 {
+            print("exec call to rotate function for rotation #", i+1, ": ", rotationFunctionFromExec[i])
+        
+            print("end of reset for rotation #", i, ": ", endReset[i])
+        
+        
+            print(rotationFunctionFromExec[i+1] > endReset[i])
+        }
+//        print("rotation #: ", i)
+//        
+//        if (startingRotationFunction[i] > rotationFunctionFromExec[i]) {
+//            
+//            print(startingRotationFunction[i] - rotationFunctionFromExec[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        
+//        if (callRotationAnimation[i] > startingRotationFunction[i]) {
+//            
+//            print(callRotationAnimation[i] - startingRotationFunction[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        if (startRotationAnimation[i] > callRotationAnimation[i]) {
+//            
+//            print(startRotationAnimation[i] - callRotationAnimation[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        if (endRotationFunc[i] > startRotationAnimation[i]) {
+//            
+//            print(endRotationFunc[i] - startRotationAnimation[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        if (endRotationAnimation[i] > endRotationFunc[i]) {
+//            
+//            print(endRotationAnimation[i] - endRotationFunc[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        if (startReset[i] > endRotationAnimation[i]) {
+//            
+//            print(startReset[i] - endRotationAnimation[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        if (endReset[i] > startReset[i]) {
+//            
+//            print(endReset[i] - startReset[i])
+//        }
+//        else {
+//            print("error: check for time loss")
+//        }
+//        
+//        
+//        
+//        
+//        
+//        
+//        
+//        
+//        if i < rotationDispatch.count-1 {
+//            
+//            if (rotationFunctionFromExec[i+1] > endReset[i]) {
+//                
+//                print(rotationFunctionFromExec[i+1] - endReset[i])
+//            }
+//            
+//            
+//            else {
+//                print("error: check for time loss")
+//            }
+//                
+//            
+//        }
         
     }
 }
@@ -899,18 +1104,67 @@ class GameViewController: UIViewController {
         
         //ourCube.rotateBottom()
         
-        let arrayOfMoves:[()->()] = [ourCube.rotateRight, ourCube.rotateRight, ourCube.rotateRight] //, ourCube.rotateRight, ourCube.rotateBack]
-        
-        
-        
-        let when = DispatchTime.now() + 5 // change 2 to desired number of seconds
-        
-        
-        DispatchQueue.main.asyncAfter(deadline: when) {
-            // Your code with delay
-            executeMoves(moves: arrayOfMoves)
+        let arrayOfMoves:[()->()] = [
             
-        }
+           
+        
+             
+            ourCube.rotateRight,
+            ourCube.rotateRight,
+            ourCube.rotateRight,
+            ourCube.rotateRight,
+
+      
+            ourCube.rotateLeft,
+            ourCube.rotateLeft,
+            ourCube.rotateLeft,
+            ourCube.rotateLeft,
+
+            
+            
+            
+
+            ourCube.rotateFront,
+            ourCube.rotateFront,
+            ourCube.rotateFront,
+            ourCube.rotateFront,
+
+ 
+            ourCube.rotateBack,
+            ourCube.rotateBack,
+            ourCube.rotateBack,
+            ourCube.rotateBack
+//
+//            
+//            
+//            ourCube.rotateTop,
+//            ourCube.rotateTop,
+//            ourCube.rotateTop,
+//            ourCube.rotateTop,
+// 
+// 
+// 
+// 
+// 
+//            ourCube.rotateBottom,
+//            ourCube.rotateBottom,
+//            ourCube.rotateBottom,
+//            ourCube.rotateBottom
+//        
+// 
+//    */
+        
+        
+        ]
+        
+        
+        
+        
+        //, ourCube.rotateTop]  //, ourCube.rotateRight, ourCube.rotateRight] //, ourCube.rotateBack]
+        
+        
+        
+        executeMoves(moves: arrayOfMoves)
 
 
 
