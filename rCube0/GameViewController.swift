@@ -374,7 +374,7 @@ class cubie {
 
 
 
-var test = 1
+
 
 class rotationGroup {
     
@@ -403,9 +403,31 @@ class rotationGroup {
     
     
     
+    
 
 
 }
+
+
+
+
+enum Angle: Float {
+    
+    case quarterTurn = -1.5708 //-Float.pi/2.0
+    case halfTurn = 3.14159
+    case inverseQuarterTurn = 1.5708 //Float.pi/2.0
+    
+    
+}
+
+
+
+
+struct Move {
+    var axisString:String = ""
+    var angle:Angle = Angle.quarterTurn
+}
+
 
 
 class customCube {
@@ -422,7 +444,7 @@ class customCube {
     let cubeNode:SCNNode = SCNNode()
     
     
-    var movesToExecute:[String] = []
+    var movesToExecute:[Move] = []
     
     
     
@@ -565,15 +587,17 @@ class customCube {
     
     
     func groupRotate() {
-        // MAJOR TODO: consider getting rid of rotation groups and using SCNACtion.group
         
         
         
+        // TODO: theres a slight error in either orientation or position over time that makes the cube look slighty deformed
         
-        for (key, cubie) in (self.rotiationGroupMap[movesToExecute[0]]?.cubieMap)! {
+        
+        
+        for (key, cubie) in (self.rotiationGroupMap[movesToExecute[0].axisString]?.cubieMap)! {
             //print("group ", axis, " has member with key ", key, " and position ", cubie.getPos())
             cubie.node.removeFromParentNode()
-            self.rotiationGroupMap[movesToExecute[0]]?.groupNode.addChildNode(cubie.node)
+            self.rotiationGroupMap[movesToExecute[0].axisString]?.groupNode.addChildNode(cubie.node)
             
         }
         
@@ -583,10 +607,10 @@ class customCube {
         
         
         // TODO: make more readable
-        actions.append(SCNAction.rotate(by: -3.14/2.0, around: (self.rotiationGroupMap[movesToExecute[0]]?.axis)!, duration: rotateTime))
+        actions.append(SCNAction.rotate(by: CGFloat(movesToExecute[0].angle.rawValue), around: (self.rotiationGroupMap[movesToExecute[0].axisString]?.axis)!, duration: rotateTime))
         
         
-        self.rotiationGroupMap[movesToExecute[0]]?.groupNode.runAction(SCNAction.sequence(actions), completionHandler: self.groupReset)
+        self.rotiationGroupMap[movesToExecute[0].axisString]?.groupNode.runAction(SCNAction.sequence(actions), completionHandler: self.groupReset)
         
         
     }
@@ -600,7 +624,7 @@ class customCube {
         // the following steps are taken to reset which cubies are in which rotation groups (from old reset in rotationgroup)
         
         // start by turning the rotation group name into an array
-        var groupNameAsArray = makeCorrdArrayWithCoordString(coordString: self.movesToExecute[0])
+        var groupNameAsArray = makeCorrdArrayWithCoordString(coordString: self.movesToExecute[0].axisString)
         
         
         // declare the index that's fixed
@@ -630,7 +654,7 @@ class customCube {
         
         
         // TODO: review all private vs public class vars
-        for (key, cubie) in (self.rotiationGroupMap[movesToExecute[0]]?.cubieMap)! {
+        for (key, cubie) in (self.rotiationGroupMap[movesToExecute[0].axisString]?.cubieMap)! {
             
             
             //print("key: ", key)
@@ -645,7 +669,7 @@ class customCube {
             let pairToTransform = [Int(keyAsArray[(fixedIndex+1)%3]), Int(keyAsArray[(fixedIndex+2)%3])]
             
             // get the pair transformed
-            let transformedPair = turnTransform(coordinates: pairToTransform, axisSign: Int(groupNameAsArray[fixedIndex]))
+            let transformedPair = turnTransform(coordinates: pairToTransform, axisSign: Int(groupNameAsArray[fixedIndex]), angle: movesToExecute[0].angle)
             
             
             var transformedTriple:[Float] = [0,0,0]
@@ -699,22 +723,25 @@ class customCube {
         
         
         
-        rotiationGroupMap[movesToExecute[0]]?.cubieMap = newCubieMap
+        rotiationGroupMap[movesToExecute[0].axisString]?.cubieMap = newCubieMap
         
         
         
-        for (key, cubie) in (self.rotiationGroupMap[movesToExecute[0]]?.cubieMap)! {
+        for (key, cubie) in (self.rotiationGroupMap[movesToExecute[0].axisString]?.cubieMap)! {
             
-            var groupOrientation:SCNQuaternion = (self.rotiationGroupMap[movesToExecute[0]]?.groupNode.orientation)!
+            var groupOrientation:SCNQuaternion = (self.rotiationGroupMap[movesToExecute[0].axisString]?.groupNode.orientation)!
             
             
-            let newGlobalPos:SCNVector3 = cubie.node.convertPosition(SCNVector3(0,0,0), to: self.rotiationGroupMap[movesToExecute[0]]?.groupNode.parent)
+            let newGlobalPos:SCNVector3 = cubie.node.convertPosition(SCNVector3(0,0,0), to: self.rotiationGroupMap[movesToExecute[0].axisString]?.groupNode.parent)
             
             cubie.node.position = newGlobalPos
             
             
             
-            cubie.node.orientation = combineQuaternions(q1: cubie.node.orientation  , q2: groupOrientation)//groupOrientation
+            cubie.node.orientation = combineQuaternions(q1: groupOrientation  , q2: cubie.node.orientation )
+                
+                
+                //combineQuaternions(q1: cubie.node.orientation  , q2: groupOrientation)
             
             
             
@@ -723,7 +750,9 @@ class customCube {
             
             cubie.node.removeFromParentNode()
             
-            self.rotiationGroupMap[movesToExecute[0]]?.groupNode.parent?.addChildNode(cubie.node)
+            
+            // TODO: clean up movesToExecute string call
+            self.rotiationGroupMap[movesToExecute[0].axisString]?.groupNode.parent?.addChildNode(cubie.node)
             
             
             
@@ -731,7 +760,7 @@ class customCube {
             
         }
         //self.groupNode.pivot = SCNMatrix4Rotate(self.groupNode.pivot, -3.14/2.0, self.axis.x, self.axis.y, self.axis.z)
-        self.rotiationGroupMap[movesToExecute[0]]?.groupNode.orientation = SCNQuaternion(0,0,0,0)
+        self.rotiationGroupMap[movesToExecute[0].axisString]?.groupNode.orientation = SCNQuaternion(0,0,0,0)
         
         
         movesToExecute.remove(at: 0)
@@ -753,7 +782,7 @@ class customCube {
     
     
     
-    func startRotations(moves:[String]) {
+    func startRotations(moves:[Move]) {
         
         movesToExecute = moves
         
@@ -768,24 +797,47 @@ class customCube {
 
 
 
+//TODO: consider using array to store cubies and having rotation groups access certain array elements
 
-var rotationDispatch:[dispatch_time_t] = []
-
-var rotationFunctionFromExec:[dispatch_time_t] = []
-var startingRotationFunction:[dispatch_time_t] = []
-var callRotationAnimation:[dispatch_time_t] = []
-var startRotationAnimation:[dispatch_time_t] = []
-var endRotationFunc:[dispatch_time_t] = []
-var endRotationAnimation:[dispatch_time_t] = []
-var startReset:[dispatch_time_t] = []
-var endReset:[dispatch_time_t] = []
-
-func turnTransform(coordinates: [Int], axisSign:Int) -> [Int] {
+func turnTransform(coordinates: [Int], axisSign:Int, angle:Angle) -> [Int] {
     
     
-    return [axisSign * coordinates[1], axisSign * -coordinates[0]]
+    
+    if angle == Angle.quarterTurn {
+        
+        return [axisSign * coordinates[1], axisSign * -coordinates[0]]
+        
+    }
+    
+    
+    else if angle == Angle.inverseQuarterTurn {
+        
+        
+        return [ -axisSign * coordinates[1], -axisSign * -coordinates[0]]
+        
+    }
+    
+    else {
+        
+        return [ -coordinates[0], -coordinates[1]]
+        
+    }
+    
+    
+    
 }
 
+
+
+
+enum Faces: String {
+    case Left = "(1,0,0)"
+    case Right = "(-1,0,0)"
+    case Front = "(0,0,1)"
+    case Back = "(0,0,-1)"
+    case Top = "(0,1,0)"
+    case Bottom = "(0,-1,0)"
+}
 
 class rubicksCube: customCube {
     
@@ -794,32 +846,11 @@ class rubicksCube: customCube {
         super.init(cubeSideLen: 10, numCubiesPerSide: 3, cubePos: position)
     }
     
-    // TODO: consider moving where the rotation function is defined
-//    func rotateFront() {
-//        self.rotate(groupName: "(0,0,1)")
-//    }
-//    
-//    func rotateBack() {
-//        self.rotate(groupName: "(0,0,-1)")
-//    }
-//    
-//    func rotateLeft() {
-//        self.rotate(groupName: "(-1,0,0)")
-//    }
-//    
-//    func rotateRight() {
-//        self.rotate(groupName: "(1,0,0)")
-//    }
-//    
-//    func rotateTop() {
-//        self.rotate(groupName: "(0,1,0)")
-//    }
-//    
-//    func rotateBottom() {
-//        self.rotate(groupName: "(0,-1,0)")
-//    }
+    // TODO: still remember to check about coordinates being stored as strings
     
+  
     
+    // TODOL find a way for this subclass to be usefull
     
     
     
@@ -830,114 +861,8 @@ class rubicksCube: customCube {
 
 
 
-
-func runTimeDiagnostics() {
-    
-    
-    for i in 0 ... (rotationDispatch.count-1) {
-        
-        if i < rotationDispatch.count-1 {
-            print("exec call to rotate function for rotation #", i+1, ": ", rotationFunctionFromExec[i])
-        
-            print("end of reset for rotation #", i, ": ", endReset[i])
-        
-        
-            print(rotationFunctionFromExec[i+1] > endReset[i])
-        }
-//        print("rotation #: ", i)
-//        
-//        if (startingRotationFunction[i] > rotationFunctionFromExec[i]) {
-//            
-//            print(startingRotationFunction[i] - rotationFunctionFromExec[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        
-//        if (callRotationAnimation[i] > startingRotationFunction[i]) {
-//            
-//            print(callRotationAnimation[i] - startingRotationFunction[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        if (startRotationAnimation[i] > callRotationAnimation[i]) {
-//            
-//            print(startRotationAnimation[i] - callRotationAnimation[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        if (endRotationFunc[i] > startRotationAnimation[i]) {
-//            
-//            print(endRotationFunc[i] - startRotationAnimation[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        if (endRotationAnimation[i] > endRotationFunc[i]) {
-//            
-//            print(endRotationAnimation[i] - endRotationFunc[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        if (startReset[i] > endRotationAnimation[i]) {
-//            
-//            print(startReset[i] - endRotationAnimation[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        if (endReset[i] > startReset[i]) {
-//            
-//            print(endReset[i] - startReset[i])
-//        }
-//        else {
-//            print("error: check for time loss")
-//        }
-//        
-//        
-//        
-//        
-//        
-//        
-//        
-//        
-//        if i < rotationDispatch.count-1 {
-//            
-//            if (rotationFunctionFromExec[i+1] > endReset[i]) {
-//                
-//                print(rotationFunctionFromExec[i+1] - endReset[i])
-//            }
-//            
-//            
-//            else {
-//                print("error: check for time loss")
-//            }
-//                
-//            
-//        }
-        
-    }
-}
 
 class GameViewController: UIViewController {
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -951,19 +876,19 @@ class GameViewController: UIViewController {
         
 //        // conveniece placement of rubicks cube properties
 //        let cubeX:Float = 0.0
-//        let cubeY:Float = 0.0
-//        let cubeZ:Float = -20.0
-//        //let cubieCurve:CGFloat = 0.5
-//        let rubicksCubeSideLen:CGFloat = 10
-//        let dimensionOfCube:Int = 10
-//
-//        
-//        // set up the vector witht the cube's position
-//        let ourCubePos:SCNVector3 = SCNVector3Make(cubeX, cubeY, cubeZ)
-//        
-//        
-//        // define the rubicks cube
-//        let ourCube:customCube = customCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
+  //      let cubeY:Float = 0.0
+    //    let cubeZ:Float = -20.0
+      //  //let cubieCurve:CGFloat = 0.5
+        //let rubicksCubeSideLen:CGFloat = 10
+        //let dimensionOfCube:Int = 10
+
+        
+        // set up the vector witht the cube's position
+        //let ourCubePos:SCNVector3 = SCNVector3Make(cubeX, cubeY, cubeZ)
+        
+        
+        // define the rubicks cube
+        //let ourCube:customCube = customCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
         
         
         
@@ -972,59 +897,79 @@ class GameViewController: UIViewController {
         
 
         
-        let arrayOfMoveStrings:[String] = [
+        
+        
+        let moveArray:[Move] = [
             
             
             
             
-            "(1,0,0)",
-            "(1,0,0)",
-            "(1,0,0)",
-            "(1,0,0)",
+            Move(axisString: Faces.Left.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Left.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Left.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Left.rawValue, angle: Angle.quarterTurn),
             
             
-            "(-1,0,0)",
-            "(-1,0,0)",
-            "(-1,0,0)",
-            "(-1,0,0)",
+            Move(axisString: Faces.Right.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Right.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Right.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Right.rawValue, angle: Angle.quarterTurn),
             
             
-            "(0,0,1)",
-            "(0,0,1)",
-            "(0,0,1)",
-            "(0,0,1)",
+            Move(axisString: Faces.Front.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Front.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Front.rawValue, angle: Angle.quarterTurn),
+            Move(axisString: Faces.Front.rawValue, angle: Angle.quarterTurn),
             
             
-            "(0,0,-1)",
-            "(0,0,-1)",
-            "(0,0,-1)",
-            "(0,0,-1)",
+            Move(axisString: "(0,0,-1)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,-1)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,-1)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,-1)", angle: Angle.quarterTurn),
             
-            "(0,1,0)",
-            "(0,1,0)",
-            "(0,1,0)",
-            "(0,1,0)",
-            
-            
-            "(0,-1,0)",
-            "(0,-1,0)",
-            "(0,-1,0)",
-            "(0,-1,0)"
+            Move(axisString: "(0,1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.quarterTurn),
             
             
-//            "(1,0,0)",
-//            "(0,1,0)",
-//            "(0,0,1)",
-//            "(0,-1,0)",
-//            "(-1,0,0)",
-//            "(0,0,-1)",
-//            
-//            "(1,0,0)",
-//            "(0,1,0)",
-//            "(0,0,1)",
-//            "(0,-1,0)",
-//            "(-1,0,0)",
-//            "(0,0,-1)"
+            Move(axisString: "(0,-1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.quarterTurn),
+            
+            
+            Move(axisString: "(1,0,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,1)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(-1,0,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,-1)", angle: Angle.quarterTurn),
+            
+            Move(axisString: "(1,0,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,1)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(-1,0,0)", angle: Angle.quarterTurn),
+            Move(axisString: "(0,0,-1)", angle: Angle.quarterTurn),
+            
+            
+            Move(axisString: "(0,0,-1)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(-1,0,0)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(0,0,1)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(1,0,0)", angle: Angle.inverseQuarterTurn),
+            
+            Move(axisString: "(0,0,-1)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(-1,0,0)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(0,-1,0)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(0,0,1)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(0,1,0)", angle: Angle.inverseQuarterTurn),
+            Move(axisString: "(1,0,0)", angle: Angle.inverseQuarterTurn)
+            
+            
+            
         ]
         
         
@@ -1036,7 +981,7 @@ class GameViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: when) {
             // Your code with delay
-            ourCube.startRotations(moves: arrayOfMoveStrings)
+            ourCube.startRotations(moves: moveArray)
         }
         
         
