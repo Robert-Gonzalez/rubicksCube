@@ -15,10 +15,6 @@ import SceneKit
 
 let rotateTime:TimeInterval = 0.2
 
-
-
-
-
 var rotationAndResetComplete:Bool = true
 
 // function for scaling all components of a three-diensional vector
@@ -31,8 +27,6 @@ func scaleVector(vec:SCNVector3, scalingFactor:Float) -> SCNVector3 {
     
     return vecToMut
 }
-
-
 
 func addVecs(vec1:SCNVector3, vec2:SCNVector3) -> SCNVector3 {
     
@@ -58,7 +52,6 @@ func addQuaternions(q1:SCNQuaternion, q2:SCNQuaternion) -> SCNQuaternion {
     return newQ
     
 }
-
 
 func combineQuaternions(q1:SCNQuaternion, q2:SCNQuaternion) -> SCNQuaternion {
     
@@ -86,7 +79,6 @@ func makeVecWithCoordString(coordAsString: String) -> SCNVector3 {
     
     return makeVecWithCoordinateArray(coord: (makeCorrdArrayWithCoordString(coordString: coordAsString)))
 }
-
 
 func makeCorrdArrayWithCoordString(coordString: String) -> [Float] {
     
@@ -124,15 +116,11 @@ func makeVecWithCoordinateArray(coord: [Float]) -> SCNVector3 {
     
 }
 
-
-
 func makeCoordStringWithCoordArray(coordArray: [Float]) -> String {
     
     return "(" + String(Int(coordArray[0])) +  "," + String(Int(coordArray[1])) +  "," + String(Int(coordArray[2])) +  ")"
     
 }
-
-
 
 func makeMaterials() -> [SCNMaterial]{
     let colors = [UIColor.white, UIColor.green, UIColor.yellow, UIColor.blue, UIColor.red, UIColor.orange, UIColor.black, UIColor.gray]
@@ -151,9 +139,6 @@ func makeMaterials() -> [SCNMaterial]{
     
     return materials
 }
-
-
-
 
 
 //
@@ -228,7 +213,6 @@ class panel {
     
     
 }
-
 
 class cubie {
     
@@ -370,12 +354,6 @@ class cubie {
     
 }
 
-
-
-
-
-
-
 class rotationGroup {
     
     var cubieMap: [String : cubie] = [:]
@@ -408,9 +386,6 @@ class rotationGroup {
 
 }
 
-
-
-
 enum Angle: Float {
     
     case quarterTurn = -1.5708 //-Float.pi/2.0
@@ -420,15 +395,10 @@ enum Angle: Float {
     
 }
 
-
-
-
 struct Move {
     var axisString:String = ""
     var angle:Angle = Angle.quarterTurn
 }
-
-
 
 class customCube {
     
@@ -795,8 +765,6 @@ class customCube {
     
 }
 
-
-
 //TODO: consider using array to store cubies and having rotation groups access certain array elements
 
 func turnTransform(coordinates: [Int], axisSign:Int, angle:Angle) -> [Int] {
@@ -826,9 +794,6 @@ func turnTransform(coordinates: [Int], axisSign:Int, angle:Angle) -> [Int] {
     
     
 }
-
-
-
 
 enum Faces: String {
     case Left = "(1,0,0)"
@@ -862,6 +827,431 @@ class rubicksCube: customCube {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let cubieDict:[String:Int] = [
+    
+    
+    
+    // corners
+    "whiteBlueOrange":      0,
+    "whiteBlueRed":         1,
+    "whiteGreenRed":        2,
+    "whiteGreenOrange":     3,
+    "yellowGreenOrange":    4,
+    "yellowGreenRed":       5,
+    "yellowBlueRed":        6,
+    "yellowBlueOrange":     7,
+    
+    
+    
+    // edges
+    "whiteOrange":          8,
+    "whiteBlue":            9,
+    "whiteRed":             10,
+    "whiteGreen":           11,
+    "yellowOrange":         12,
+    "yellowGreen":          13,
+    "yellowRed":            14,
+    "yellowBlue":           15,
+    "greenRed":             16,
+    "greenOrange":          17,
+    "blueRed":              18,
+    "blueOrange":           19
+    
+    
+    
+    
+    
+]
+
+
+let faceEdgesIndeciesDict:[String:[Int]] = [
+    
+    
+    
+    
+    "Left" :    [cubieDict["whiteGreen"]!, cubieDict["whiteRed"]!, cubieDict["yellowGreen"]!, cubieDict["greenOrange"]!],
+    
+    
+    "Right":    [cubieDict["yellowBlue"]!, cubieDict["blueRed"]!, cubieDict["whiteBlue"]!, cubieDict["blueOrange"]!],
+    
+    
+    "Front":    [cubieDict["whiteBlue"]!, cubieDict["whiteRed"]!, cubieDict["whiteGreen"]!, cubieDict["whiteOrange"]!],
+    
+    
+    "Back":     [cubieDict["yellowGreen"]!, cubieDict["yellowRed"]!, cubieDict["yellowBlue"]!, cubieDict["yellowOrange"]!],
+    
+    
+    "Top":      [cubieDict["blueRed"]!, cubieDict["yellowRed"]!, cubieDict["greenRed"]!, cubieDict["whiteRed"]!],
+    
+    
+    "Bottom":   [cubieDict["blueOrange"]!, cubieDict["whiteOrange"]!, cubieDict["greenOrange"]!, cubieDict["yellowOrange"]!],
+    
+    
+    
+    
+    
+]
+
+
+
+
+let faceCornersIndeciesDict:[String:[Int]] = [
+    
+    
+    
+    
+    "Left" :    [cubieDict["whiteGreenOrange"]!, cubieDict["whiteGreenRed"]!, cubieDict["yellowGreenRed"]!, cubieDict["yellowGreenOrange"]!],
+    
+    
+    "Right":    [cubieDict["whiteBlueOrange"]!, cubieDict["yellowBlueOrange"]!, cubieDict["yellowBlueRed"]!, cubieDict["whiteBlueRed"]!],
+    
+    
+    "Front":    [cubieDict["whiteBlueOrange"]!, cubieDict["whiteBlueRed"]!, cubieDict["whiteGreenRed"]!, cubieDict["whiteGreenOrange"]!],
+    
+    
+    "Back":     [cubieDict["yellowGreenOrange"]!, cubieDict["yellowGreenRed"]!, cubieDict["yellowBlueRed"]!, cubieDict["yellowBlueOrange"]!],
+    
+    
+    "Top":      [cubieDict["whiteBlueRed"]!, cubieDict["yellowBlueRed"]!, cubieDict["yellowGreenRed"]!, cubieDict["whiteGreenRed"]!],
+    
+    
+    "Bottom":   [cubieDict["yellowGreenOrange"]!, cubieDict["yellowBlueOrange"]!, cubieDict["whiteBlueOrange"]!, cubieDict["whiteGreenOrange"]!],
+    
+    
+    
+    
+    
+]
+
+
+
+
+
+
+
+func makeConfigStringRep(arrayRep:[Int]) -> String {
+    
+    var stringRep = "("
+    
+    
+    for i in 0 ... arrayRep.count-1 {
+        
+        stringRep.append(String(arrayRep[i]))
+        
+        
+        if i != arrayRep.count-1 {
+            stringRep.append(",")
+        }
+        else {
+            stringRep.append(")")
+        }
+        
+    }
+    
+    return stringRep
+    
+}
+
+
+
+class cublet {
+    
+    private var cubieArray:[Int]
+    
+    private let solvedCubieString = "(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)"
+    
+    
+    
+    init(arrayOfCubieNums:[Int]) {
+        
+        cubieArray = arrayOfCubieNums
+    }
+    
+    
+    
+    
+    
+}
+
+let solvedCubieString = "(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)"
+
+
+
+enum FaceType:String {
+    
+    case Left = "Left"
+    case Right = "Right"
+    case Front = "Front"
+    case Back = "Back"
+    case Top = "Top"
+    case Bottom = "Bottom"
+    
+}
+
+enum TurnType : Int {
+    
+    case quarterTurn = 1
+    case halfTurn = 2
+    case inverseTurn = -1
+    
+}
+
+
+
+
+
+var tableOfCheckedConfigurationsPaths:[String:[(FaceType,TurnType)]] = [:]
+
+var tableOfCheckedConfigurationsStrings:[String:String] = [:]
+
+
+
+
+
+
+var check = 0
+
+
+func solveCube(arrayOfCubies:[Int]) -> [(FaceType,TurnType)] {
+    
+    
+    
+    
+    let configString = makeConfigStringRep(arrayRep: arrayOfCubies)
+    
+    
+    print(configString)
+    
+    
+    if tableOfCheckedConfigurationsStrings[configString] != nil {
+        
+        print("TRUE")
+        return []
+            
+            //tableOfCheckedConfigurationsPaths[configString]!
+    }
+    
+    
+    if configString == solvedCubieString {
+        
+        print("Done!")
+        return []
+        
+        
+    }
+    
+    
+    tableOfCheckedConfigurationsStrings[configString] = configString
+    
+    //print(tableOfCheckedConfigurationsStrings)
+    
+    
+    
+    let turnArray = [TurnType.quarterTurn, TurnType.halfTurn, TurnType.inverseTurn]
+    
+    
+    let faceArray = [FaceType.Left, FaceType.Right, FaceType.Front, FaceType.Back, FaceType.Top, FaceType.Bottom]
+    
+    
+    var altPaths:[[(FaceType,TurnType)]] = []
+    
+    
+    for turn in turnArray {
+        for face in faceArray{
+            print("check: ", check)
+            print(face)
+            print(turn)
+            print([(face, turn)])
+            let altPath:[(FaceType,TurnType)] = [(face, turn)] + solveCube(arrayOfCubies: turnFace(cubieArray: arrayOfCubies, face: face, turn: turn))
+            
+            check += 1
+            
+            
+            
+            
+            altPaths.append(altPath)
+            
+        }
+        
+        
+        
+    }
+    
+    var min = Int.max
+    var minIndex:Int = 0
+    
+    for i in 0 ... altPaths.count {
+        
+        
+        let path = altPaths[i]
+        
+        if (path.count < min) {
+            min = path.count
+            
+            minIndex = i
+            
+        }
+    }
+    
+    tableOfCheckedConfigurationsPaths[configString] = altPaths[minIndex]
+    
+    return altPaths[minIndex]
+    
+    
+}
+
+
+
+func turnFace(cubieArray:[Int], face: FaceType, turn: TurnType) -> [Int] {
+    
+    let turnedCorners = turnFaceForCubieType(cubieArray: cubieArray, cubieTypeDict: faceCornersIndeciesDict, face: face, turn: turn)
+    
+    let turnedEdgesAndCorners = turnFaceForCubieType(cubieArray: turnedCorners, cubieTypeDict: faceEdgesIndeciesDict, face: face, turn: turn)
+    
+    return turnedEdgesAndCorners
+    
+}
+
+func turnFaceForCubieType(cubieArray:[Int], cubieTypeDict:[String:[Int]], face: FaceType, turn: TurnType) -> [Int] {
+    
+    
+    var newArray = cubieArray
+    
+    let indexDict:[Int] = cubieTypeDict[face.rawValue]!
+    
+    let numIndecies:Int = indexDict.count
+    
+    
+    if turn == TurnType.quarterTurn {
+        
+        var temp1:Int
+        
+        var temp2:Int = newArray[indexDict[0]]
+        
+        for index in 0 ... (indexDict.count - 1) {
+            
+            
+            temp1 = newArray[indexDict[(index + 1)%numIndecies]]
+            
+            newArray[indexDict[(index + 1)%numIndecies]] = temp2
+            
+            temp2 = temp1
+        }
+        
+    }
+        
+        
+        
+        
+        
+    else if turn == TurnType.halfTurn {
+        
+        for index in 0 ... ((indexDict.count - 1)/2) {
+            
+            
+            let temp = newArray[indexDict[(index + 2)%numIndecies]]
+            
+            
+            newArray[indexDict[(index + 2)%numIndecies]] = cubieArray[indexDict[0]]
+            
+            
+            newArray[indexDict[0]] = temp
+            
+            
+        }
+        
+    }
+        
+        
+    else {
+        
+        
+        var temp1:Int
+        
+        var temp2:Int = newArray[indexDict[indexDict.count-1]]
+        
+        for index in (indexDict.count - 1) ... 0 {
+            
+            
+            temp1 = newArray[indexDict[(index - 1)%numIndecies]]
+            
+            newArray[indexDict[(index - 1)%numIndecies]] = temp2
+            
+            temp2 = temp1
+        }
+        
+        
+    }
+    
+    
+    return newArray
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class GameViewController: UIViewController {
     
     
@@ -888,7 +1278,7 @@ class GameViewController: UIViewController {
         
         
         // define the rubicks cube
-        //let ourCube:customCube = customCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
+//        let ourCube:customCube = customCube(cubeSideLen: rubicksCubeSideLen, numCubiesPerSide: dimensionOfCube, cubePos: ourCubePos)
         
         
         
@@ -981,11 +1371,96 @@ class GameViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: when) {
             // Your code with delay
-            ourCube.startRotations(moves: moveArray)
+            //ourCube.startRotations(moves: moveArray)
         }
         
         
+//        
+//        
+//        let cubeArrayToSolve:[Int] = [
+//            
+//            
+//            // TODO: use real dict?
+//            
+//            
+//            
+//            //corners
+//            
+//            cubieDict["whiteBlueOrange"]!, // white bottom left
+//            cubieDict["whiteBlueRed"]!, // white top left
+//            cubieDict["whiteGreenRed"]!, // white top right
+//            cubieDict["whiteGreenOrange"]!, // white bottom right
+//            cubieDict["yellowGreenOrange"]!, // yellow bottom left
+//            cubieDict["yellowGreenRed"]!, // yellow top left
+//            cubieDict["yellowBlueRed"]!, // yellow top right
+//            cubieDict["yellowBlueOrange"]!, // yellow bottom right
+//            
+//            
+//            //edges
+//                                
+//                                
+//            cubieDict["whiteOrange"]!, // white bottom
+//            cubieDict["whiteBlue"]!, // white left
+//            cubieDict["whiteRed"]!, // white top
+//            cubieDict["whiteGreen"]!, // white right
+//            cubieDict["yellowOrange"]!, // yellow bottom
+//            cubieDict["yellowGreen"]!, // yellow left
+//            cubieDict["yellowRed"]!, // yellow top
+//            cubieDict["yellowBlue"]!, // yellow right
+//            cubieDict["greenRed"]!, // green top
+//            cubieDict["greenOrange"]!, // green bottom
+//            cubieDict["blueRed"]!, // blue top
+//            cubieDict["blueOrange"]! // blue bottom
+//            
+//            
+//
+//        
+//        ]
         
+        
+        
+        
+        let cubeArrayToSolve:[Int] = [
+            
+            
+            // TODO: use real dict?
+            
+            
+            
+            //corners
+            
+            cubieDict["whiteBlueOrange"]!, // white bottom left
+            cubieDict["whiteBlueRed"]!, // white top left
+            cubieDict["whiteGreenOrange"]!, // white top right
+            cubieDict["yellowGreenOrange"]!, // white bottom right
+            cubieDict["yellowBlueOrange"]!, // yellow bottom left
+            cubieDict["yellowGreenRed"]!, // yellow top left
+            cubieDict["whiteGreenRed"]!, // yellow top right
+            cubieDict["yellowBlueRed"]!, // yellow bottom right
+            
+            
+            //edges
+            
+            
+            cubieDict["whiteOrange"]!, // white bottom
+            cubieDict["whiteBlue"]!, // white left
+            cubieDict["whiteRed"]!, // white top
+            cubieDict["greenOrange"]!, // white right
+            cubieDict["yellowBlue"]!, // yellow bottom
+            cubieDict["greenOrange"]!, // yellow left
+            cubieDict["greenRed"]!, // yellow top
+            cubieDict["yellowRed"]!, // yellow right
+            cubieDict["whiteGreen"]!, // green top
+            cubieDict["yellowGreen"]!, // green bottom
+            cubieDict["blueRed"]!, // blue top
+            cubieDict["blueOrange"]! // blue bottom
+            
+            
+            
+            
+        ]
+        
+        print(solveCube(arrayOfCubies: cubeArrayToSolve))
         
         
         
