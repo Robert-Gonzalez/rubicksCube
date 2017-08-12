@@ -19,15 +19,15 @@ class rotationGroup {
     private var cubieMap: [String : cubie] = [:]
     private let groupNode = SCNNode()
     private let axis:SCNVector3
-    private var angleOfRotation: CGFloat = 0
+    private var angleOfRotation: CGFloat = 0 
     
     
-    init(axisVec:SCNVector3, bigCube: customCube) {
+    init(axisVec:SCNVector3, bigCube: customCube, parent: SCNNode) {
         axis = axisVec
         cube = bigCube
+        parent.addChildNode(groupNode)
     }
     
-    //TODO: check where memeber functions should/could be used
     func assignCubieAtCoord(cubie: cubie, coordKey: String) {
         cubieMap[coordKey] = cubie
     }
@@ -36,16 +36,11 @@ class rotationGroup {
         return cubieMap
     }
     
-    func setParent(parent: SCNNode) {
-        
-        parent.addChildNode(groupNode)
-    }
-    
     func rotate(angle: CGFloat) {
         
         angleOfRotation = angle
         
-        for (key, cubie) in cubieMap {
+        for (_, cubie) in cubieMap {
             cubie.setParent(parent: groupNode)
         }
         
@@ -56,7 +51,6 @@ class rotationGroup {
         
     }
     
-    // the following steps are taken to reset which cubies are in which rotation groups (from old reset in rotationgroup)
     private func resetMaps() {
         
         // start by turning the rotation group name into an array
@@ -122,7 +116,7 @@ class rotationGroup {
     
     private func resetSpatialProperties() {
         
-        for (key, cubie) in cubieMap {
+        for (_, cubie) in cubieMap {
             
             let groupOrientation:SCNQuaternion = groupNode.orientation
             let newGlobalPos:SCNVector3 = cubie.getRelativePos(observerNode: groupNode.parent!)

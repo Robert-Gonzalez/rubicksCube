@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C90B506D1F32BBFB00E6F96E /* Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B506C1F32BBFB00E6F96E /* Panel.swift */; };
+		C930237A1F35239800CCA08B /* RubicksCube.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93023791F35239800CCA08B /* RubicksCube.swift */; };
+		C930237E1F3E928400CCA08B /* ColorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C930237D1F3E928400CCA08B /* ColorHandler.swift */; };
+		C93023801F3E99C200CCA08B /* CubeBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = C930237F1F3E99C200CCA08B /* CubeBackend.swift */; };
 		C9F95FD81F31279E002EE86A /* Cubie.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F95FD71F31279E002EE86A /* Cubie.swift */; };
-		C9F95FDA1F3128FA002EE86A /* Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F95FD91F3128FA002EE86A /* Panel.swift */; };
 		C9F95FDD1F31293D002EE86A /* RotationGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F95FDC1F31293D002EE86A /* RotationGroup.swift */; };
 		C9F95FDF1F312A1E002EE86A /* Angle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F95FDE1F312A1E002EE86A /* Angle.swift */; };
 		C9F95FE11F312BDB002EE86A /* CustomCube.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F95FE01F312BDB002EE86A /* CustomCube.swift */; };
@@ -22,8 +25,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C90B506C1F32BBFB00E6F96E /* Panel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Panel.swift; sourceTree = "<group>"; };
+		C93023791F35239800CCA08B /* RubicksCube.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RubicksCube.swift; sourceTree = "<group>"; };
+		C930237D1F3E928400CCA08B /* ColorHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorHandler.swift; sourceTree = "<group>"; };
+		C930237F1F3E99C200CCA08B /* CubeBackend.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubeBackend.swift; sourceTree = "<group>"; };
 		C9F95FD71F31279E002EE86A /* Cubie.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cubie.swift; sourceTree = "<group>"; };
-		C9F95FD91F3128FA002EE86A /* Panel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Panel.swift; sourceTree = "<group>"; };
 		C9F95FDC1F31293D002EE86A /* RotationGroup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RotationGroup.swift; sourceTree = "<group>"; };
 		C9F95FDE1F312A1E002EE86A /* Angle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Angle.swift; sourceTree = "<group>"; };
 		C9F95FE01F312BDB002EE86A /* CustomCube.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomCube.swift; sourceTree = "<group>"; };
@@ -49,6 +55,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C93023811F3E99E300CCA08B /* Cube Graphics Classes */ = {
+			isa = PBXGroup;
+			children = (
+				C90B506C1F32BBFB00E6F96E /* Panel.swift */,
+				C930237D1F3E928400CCA08B /* ColorHandler.swift */,
+				C93023791F35239800CCA08B /* RubicksCube.swift */,
+				C9F95FD71F31279E002EE86A /* Cubie.swift */,
+				C9F95FDC1F31293D002EE86A /* RotationGroup.swift */,
+				C9F95FE01F312BDB002EE86A /* CustomCube.swift */,
+				C9F95FDE1F312A1E002EE86A /* Angle.swift */,
+				C9F95FE21F312C91002EE86A /* Face.swift */,
+			);
+			name = "Cube Graphics Classes";
+			sourceTree = "<group>";
+		};
 		C9FB735F1F1A7220001A360D = {
 			isa = PBXGroup;
 			children = (
@@ -74,13 +95,9 @@
 				C9FB73741F1A7220001A360D /* Assets.xcassets */,
 				C9FB73761F1A7220001A360D /* LaunchScreen.storyboard */,
 				C9FB73791F1A7220001A360D /* Info.plist */,
+				C93023811F3E99E300CCA08B /* Cube Graphics Classes */,
 				C9FB736F1F1A7220001A360D /* GameViewController.swift */,
-				C9F95FD71F31279E002EE86A /* Cubie.swift */,
-				C9F95FD91F3128FA002EE86A /* Panel.swift */,
-				C9F95FDC1F31293D002EE86A /* RotationGroup.swift */,
-				C9F95FE01F312BDB002EE86A /* CustomCube.swift */,
-				C9F95FDE1F312A1E002EE86A /* Angle.swift */,
-				C9F95FE21F312C91002EE86A /* Face.swift */,
+				C930237F1F3E99C200CCA08B /* CubeBackend.swift */,
 			);
 			path = rCube0;
 			sourceTree = "<group>";
@@ -158,13 +175,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C930237E1F3E928400CCA08B /* ColorHandler.swift in Sources */,
 				C9F95FE11F312BDB002EE86A /* CustomCube.swift in Sources */,
 				C9FB73701F1A7220001A360D /* GameViewController.swift in Sources */,
 				C9F95FDF1F312A1E002EE86A /* Angle.swift in Sources */,
 				C9F95FDD1F31293D002EE86A /* RotationGroup.swift in Sources */,
 				C9F95FE31F312C91002EE86A /* Face.swift in Sources */,
+				C930237A1F35239800CCA08B /* RubicksCube.swift in Sources */,
+				C93023801F3E99C200CCA08B /* CubeBackend.swift in Sources */,
 				C9F95FD81F31279E002EE86A /* Cubie.swift in Sources */,
-				C9F95FDA1F3128FA002EE86A /* Panel.swift in Sources */,
+				C90B506D1F32BBFB00E6F96E /* Panel.swift in Sources */,
 				C9FB736C1F1A7220001A360D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
